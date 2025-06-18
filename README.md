@@ -23,5 +23,18 @@
 - Temima Lewin
 - Chana Leah Nissel
 
+## 🛠️ **Development**
+This project was built using Node.js, React, DynamoDB, and AWS Lambda. 
+
+## 📥 **Installation**
+
+To run the app locally, follow these steps:
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/WITS2025/DOMinators.git
+
+2. Well, that's all we have for now!
+
 ## 📌 **Why TripTrek?**
 ### Because life is better when it's organized. Whether you're a meticulous planner or a spontaneous adventurer, **TripTrek** gives you the flexibility to build and adjust your itinerary on the fly.
