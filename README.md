@@ -1,4 +1,4 @@
-# 🗺️ **TripTrek! – Your Personal Itinerary Builder**
+# 🗺️ **TripTrek!** - Your Personal Itinerary Builder
 
 ### Welcome to **TripTrek**, the ultimate tool for organizing your day, trip, or event with ease and clarity. Whether you're planning a vacation, a conference, or just your weekend, **TripTrek** helps you stay on track and in control.
 
@@ -17,16 +17,14 @@
 ### 📋 **Clean & Intuitive Interface**
 ### Designed for simplicity and speed-because planning should be fun, not frustrating.
 
+## 👩‍💻 **Developers**
+- Miriam Iny
+- Sara Nechama Isenberg
+- Temima Lewin
+- Chana Leah Nissel
+
 ## 🛠️ **Development**
 This project was built using Node.js, React, DynamoDB, and AWS Lambda. 
-
-## 👩‍💻 **Meet the Developers**
-### The project was crafted with care by:
-
-+ Miriam Iny, Team Lead
-+ Temima Lewin
-+ Sara Nechama Isenberg
-+ Chana Leah Nissel
 
 ## 📥 **Installation**
 
