@@ -18,7 +18,7 @@
 ### Designed for simplicity and speed-because planning should be fun, not frustrating.
 
 ## 🛠️ **Development**
-This project was built using Node.js, React, and DynamoDB
+This project was built using Node.js, React, DynamoDB, and AWS Lambda. 
 
 ## 👩‍💻 **Meet the Developers**
 ### The project was crafted with care by:
@@ -35,7 +35,6 @@ To run the app locally, follow these steps:
 1. Clone this repository:
    ```bash
    git clone https://github.com/WITS2025/DOMinators.git
-   cd todo-app
 
 2. Well, that's all we have for now!
 
