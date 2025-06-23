@@ -13,7 +13,7 @@ const About = () => {
       <p>Do you want to avoid all fighting that sometimes happens when choosing a destination?
       </p>
       <p>
-        TripTrek will help you avoid wasting time! Have your entire trip planned in advance...and avoid all the hassle!
+        TripTrek will help you avoid wasting time! Have your entire trip planned in advance...and avoid the hassle!
       </p>
     </div>
   );
