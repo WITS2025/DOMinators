@@ -1,46 +1,40 @@
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom'; 
-import Loading from '../components/Loading';
-import Error from '../components/Error';
-//import styles from '../styles/Home.module.css';
+import React from 'react';
+import { useHistory } from 'react-router-dom';
+// Import a carousel component, e.g., from a library like 'react-responsive-carousel'
+// import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import styles from '../styles/Home.module.css';
 
 const Home = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const history = useHistory();
 
-  const location = useLocation();
-
-  // Function to get query param from URL
-  const getQueryParam = () => {
-    const params = new URLSearchParams(location.search);
-    return params.get('q') || '';
+  const redirectToTrips = () => {
+    history.push('/trips'); // Assumes '/trips' is the route for the Trips page
   };
-
-  // Handle search and API call
-  const handleSearch = async (query) => {
-    setLoading(true);
-    setError('');
-    
-  // Load previous query from URL when page loads
-  useEffect(() => {
-    const query = getQueryParam();
-    if (query) {
-      handleSearch(query);
-    }
-  }, []); // only on mount
 
   return (
     <div className={styles.container}>
-      <SearchBar onSearch={handleSearch} />
-
-      {loading && <div className={styles.centered}><Loading /></div>}
-      {error && <div className={styles.centered}><Error errorMsg={error} /></div>}
-
-      <div className={styles.sectionSpacing}>
-  
+      <h1 className={styles.heading}>Discover Your Next Adventure</h1>
+      
+      <div className={styles.carouselContainer}>
+        {/* Insert the carousel component here */}
+        {/* <Carousel>
+          <div>
+            <img src="path-to-venice-image.jpg" alt="Venice" />
+            <p className="legend">Venice</p>
+          </div>
+          <div>
+            <img src="path-to-switzerland-image.jpg" alt="Switzerland" />
+            <p className="legend">Switzerland</p>
+          </div>
+          {/* Add more images as needed */}
+        {/* </Carousel> */}
       </div>
+
+      <button onClick={redirectToTrips} className={styles.startButton}>
+        Start Planning
+      </button>
     </div>
   );
-}};
+};
 
 export default Home;
