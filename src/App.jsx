@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 // Import your page components
 import Home from './pages/Home';
-import AboutUs from './pages/AboutUs';
+import About from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
 
@@ -27,7 +27,7 @@ function App() {
         {/* Route Definitions */}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<AboutUs />} />
+          <Route path="/about" element={<About />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/trips" element={<Trips />} />
         </Routes>
