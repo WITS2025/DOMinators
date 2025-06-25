@@ -1,9 +1,9 @@
-// src/components/Trips/TripForm.jsx
+// src/components/trips/TripForm.jsx
 import { useState, useEffect } from 'react';
-import { eachDayOfInterval, format, parseISO } from 'date-fns';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
+import { format, eachDayOfInterval, parse } from 'date-fns';
 
 export default function TripForm({ trip, onSave, onCancel }) {
   const [destination, setDestination] = useState(trip.destination || '');
@@ -14,62 +14,45 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newEventName, setNewEventName] = useState({});
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (startDate && endDate && new Date(endDate) >= new Date(startDate)) {
-      const days = eachDayOfInterval({
-        start: parseISO(startDate),
-        end: parseISO(endDate),
-      });
+  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
+  const toInputDate = (display) => {
+    if (!display) return '';
+    const [m, d, y] = display.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  };
 
-      setItinerary(prev => {
-        const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
-        return days.map(date => {
-          const dateStr = format(date, 'yyyy-MM-dd');
-          return prevMap[dateStr] || { date: dateStr, events: [] };
+  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
+  const fromInputDate = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${m}/${d}/${y}`;
+  };
+
+  const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date());
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = parseMDY(startDate);
+      const end = parseMDY(endDate);
+
+      if (end >= start) {
+        const days = eachDayOfInterval({ start, end });
+        setItinerary(prev => {
+          const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
+          return days.map(date => {
+            const dateStr = format(date, 'MM/dd/yyyy');
+            return prevMap[dateStr] || { date: dateStr, events: [] };
+          });
         });
-      });
-    } else if (!startDate || !endDate) {
+      } else {
+        setItinerary([]);
+      }
+    } else {
       setItinerary([]);
     }
   }, [startDate, endDate]);
 
-  // const handleAddEvent = (date) => {
-  //   const time = newEventTime[date];
-  //   const name = newEventName[date];
-  //   if (!time || !name) return;
-  //   const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  //   // setItinerary(prev =>
-  //   //   prev.map(day =>
-  //   //     day.date === date
-  //   //       ? { ...day, events: [...day.events, { time: formattedTime, name }] }
-  //   //       : day
-  //   //   )
-  //   // );
-  //     setItinerary(prev =>
-  //       prev.map(day => {
-  //         if (day.date !== date) return day;
-
-  //         const updatedEvents = [...day.events, { time, name }];
-
-  //         const sortedEvents = updatedEvents.sort((a, b) => {
-  //           const parseTime = (str) => {
-  //             const [t, mod] = str.split(' ');
-  //             let [h, m] = t.split(':');
-  //             if (mod === 'PM' && h !== '12') h = String(+h + 12);
-  //             if (mod === 'AM' && h === '12') h = '00';
-  //             return `${h.padStart(2, '0')}:${m}`;
-  //           };
-  //           return parseTime(a.time).localeCompare(parseTime(b.time));
-  //         });
-
-  //         return { ...day, events: sortedEvents };
-  //       })
-  //     );
-  //   setNewEventTime({ ...newEventTime, [date]: '' });
-  //   setNewEventName({ ...newEventName, [date]: '' });
-  // };
-
-    const handleAddEvent = (date) => {
+  const handleAddEvent = (date) => {
     const time = newEventTime[date];
     const name = newEventName[date];
     if (!time || !name) return;
@@ -127,12 +110,18 @@ export default function TripForm({ trip, onSave, onCancel }) {
       date: day.date,
       events: [...day.events]
     }));
-    onSave({ ...trip, destination, startDate, endDate, itinerary: itineraryToSave });
+    onSave({
+      ...trip,
+      destination,
+      startDate,
+      endDate,
+      itinerary: itineraryToSave
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 p-3 bg-light rounded">
-      <h4>Add / Edit Trip</h4>
+    <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4">
+      <h4 className="text-forest-green mb-3">Add / Edit Trip</h4>
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="mb-3">
@@ -145,47 +134,49 @@ export default function TripForm({ trip, onSave, onCancel }) {
         />
       </div>
 
-      <div className="mb-3">
-        <label className="form-label">Start Date</label>
-        <input
-          type="date"
-          className="form-control"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label">End Date</label>
-        <input
-          type="date"
-          className="form-control"
-          value={endDate}
-          min={startDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label className="form-label">Start Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={startDate ? toInputDate(startDate) : ''}
+            onChange={(e) => setStartDate(fromInputDate(e.target.value))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">End Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={endDate ? toInputDate(endDate) : ''}
+            min={startDate ? toInputDate(startDate) : ''}
+            onChange={(e) => setEndDate(fromInputDate(e.target.value))}
+          />
+        </div>
       </div>
 
       {itinerary.length > 0 && (
         <div className="mb-3">
           <label className="form-label">Itinerary</label>
           {itinerary.map((day, i) => (
-            <div key={i} className="border p-2 mb-3 rounded">
-              <strong>{format(parseISO(day.date), 'EEEE, MMM d')}</strong>
+            <div key={i} className="border rounded p-3 mb-3">
+              <strong>{day.date}</strong>
               <ul className="list-unstyled">
                 {day.events.map((event, j) => (
                   <li key={j}>
-                    <span>{event.time} — {event.name}</span>
+                    {event.time} — {event.name}
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger ms-2"
-                      onClick={() => handleRemoveEvent(day.date, j)}>
+                      onClick={() => handleRemoveEvent(day.date, j)}
+                    >
                       Remove
                     </button>
                   </li>
                 ))}
               </ul>
-              <div className="d-flex gap-2 align-items-center mt-2">
+              <div className="d-flex flex-wrap gap-2 mt-2">
                 <TimePicker
                   disableClock={true}
                   clearIcon={null}
@@ -203,7 +194,8 @@ export default function TripForm({ trip, onSave, onCancel }) {
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-primary"
-                  onClick={() => handleAddEvent(day.date)}>
+                  onClick={() => handleAddEvent(day.date)}
+                >
                   + Add Event
                 </button>
               </div>
@@ -212,8 +204,10 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       )}
 
-      <button type="submit" className="btn btn-success me-2">Save</button>
-      <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+      <div className="mt-3">
+        <button type="submit" className="btn btn-terra me-2">Save</button>
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+      </div>
     </form>
   );
 }
