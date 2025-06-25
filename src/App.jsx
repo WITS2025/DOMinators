@@ -7,7 +7,7 @@ import About from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
 
-import NavigationBar from './Components/NavigationBar';
+import NavigationBar from './components/NavigationBar';
 
 
 function App() {
