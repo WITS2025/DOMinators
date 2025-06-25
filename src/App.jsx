@@ -1,3 +1,9 @@
+<<<<<<< trips-page-issue17
+import { useState } from 'react'
+import Trips from './pages/Trips'
+
+function App() {
+=======
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
@@ -9,9 +15,16 @@ import Trips from './pages/Trips';
 
 import NavigationBar from './NavigationBar';
 
+>>>>>>> main
 
 function App() {
   return (
+<<<<<<< trips-page-issue17
+    <>
+
+    </>
+  )
+=======
     <Router>
       <div>
         <NavigationBar />
@@ -34,6 +47,7 @@ function App() {
       </div>
     </Router>
   );
+>>>>>>> main
 }
 
 export default App;
