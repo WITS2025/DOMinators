@@ -13,7 +13,7 @@ import About from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
 
-import NavigationBar from './NavigationBar';
+import NavigationBar from './components/NavigationBar';
 
 >>>>>>> main
 
@@ -28,14 +28,6 @@ function App() {
     <Router>
       <div>
         <NavigationBar />
-        <nav>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About Us</Link></li>
-            <li><Link to="/contact">Contact Us</Link></li>
-            <li><Link to="/trips">Trips</Link></li>
-          </ul>
-        </nav>
 
         {/* Route Definitions */}
         <Routes>
