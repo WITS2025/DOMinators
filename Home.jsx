@@ -1,37 +1,40 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-// Import a carousel component, e.g., from a library like 'react-responsive-carousel'
-// import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
-import styles from '../styles/Home.module.css';
+import { Carousel } from 'react-responsive-carousel';
+import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Home = () => {
   const history = useHistory();
 
   const redirectToTrips = () => {
-    history.push('/trips'); // Assumes '/trips' is the route for the Trips page
+    history.push('/trips');
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.heading}>Discover Your Next Adventure</h1>
+    <div className="container mt-5">
+      <h1 className="text-center mb-4">Discover Your Next Adventure</h1>
       
-      <div className={styles.carouselContainer}>
-        {/* Insert the carousel component here */}
-        {/* <Carousel>
+      <div className="mb-4">
+        <Carousel showThumbs={false} autoPlay={true} infiniteLoop={true}>
           <div>
-            <img src="path-to-venice-image.jpg" alt="Venice" />
+            <img src="/images/venice.jpg" alt="Venice" />
             <p className="legend">Venice</p>
           </div>
           <div>
-            <img src="path-to-switzerland-image.jpg" alt="Switzerland" />
+            <img src="/images/switzerland.jpg" alt="Switzerland" />
             <p className="legend">Switzerland</p>
           </div>
-          {/* Add more images as needed */}
-        {/* </Carousel> */}
+          <div>
+            <img src="/images/banff.jpg" alt="Banff" />
+            <p className="legend">Banff</p>
+          </div>
+      
+        </Carousel>
       </div>
 
-      <button onClick={redirectToTrips} className={styles.startButton}>
-        Start Planning
+      <button className="btn btn-primary btn-block" onClick={redirectToTrips}>
+        Explore Trips
       </button>
     </div>
   );
