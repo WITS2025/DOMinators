@@ -7,11 +7,14 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
 
+import NavigationBar from './NavigationBar';
+
+
 function App() {
   return (
     <Router>
       <div>
-        {/* Navigation Menu */}
+        <NavigationBar />
         <nav>
           <ul>
             <li><Link to="/">Home</Link></li>
