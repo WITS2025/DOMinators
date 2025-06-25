@@ -1,34 +1,24 @@
 import React from 'react';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import styles from './NavigationBar.module.css';
 
-function NavigationBar() {
+const NavigationBar = () => {
   return (
-    <nav className={`navbar navbar-expand-lg ${styles.customNavbar}`}>
-      <div className="container-fluid">
-        <Link className={`navbar-brand ${styles.navbarBrand}`} to="/">Camp On The Go</Link>
-        <button className={`navbar-toggler ${styles.navbarToggler}`} type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <Link className={`nav-link ${styles.navLink}`} to="/">Home</Link>
-            </li>
-            <li className="nav-item">
-              <Link className={`nav-link ${styles.navLink}`} to="/about">About Us</Link>
-            </li>
-            <li className="nav-item">
-              <Link className={`nav-link ${styles.navLink}`} to="/trips">Trips</Link>
-            </li>
-            <li className="nav-item">
-              <Link className={`nav-link ${styles.navLink}`} to="/contact">Contact Us</Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <Navbar bg="light" expand="lg" className="shadow-sm">
+      <Container>
+        <Navbar.Brand as={Link} to="/">MyWebsite</Navbar.Brand>
+        <Navbar.Toggle aria-controls="main-navbar-nav" />
+        <Navbar.Collapse id="main-navbar-nav">
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/">Home</Nav.Link>
+            <Nav.Link as={Link} to="/trips">Trips</Nav.Link>
+            <Nav.Link as={Link} to="/about">About</Nav.Link>
+            <Nav.Link as={Link} to="/contact">Contact Us</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
-}
+};
 
 export default NavigationBar;
