@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 const NavigationBar = () => {
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm">
-      <Container>
-        <Navbar.Brand as={Link} to="/">MyWebsite</Navbar.Brand>
+      <Container fluid>
+        <Navbar.Brand as={Link} to="/">TripTrek</Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
         <Navbar.Collapse id="main-navbar-nav">
           <Nav className="ms-auto">
