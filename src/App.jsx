@@ -1,3 +1,9 @@
+<<<<<<< trips-page-issue17
+import { useState } from 'react'
+import Trips from './pages/Trips'
+
+function App() {
+=======
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
@@ -7,22 +13,21 @@ import About from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
 
-import NavigationBar from './NavigationBar';
+import NavigationBar from './components/NavigationBar';
 
+>>>>>>> main
 
 function App() {
   return (
+<<<<<<< trips-page-issue17
+    <>
+
+    </>
+  )
+=======
     <Router>
       <div>
         <NavigationBar />
-        <nav>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About Us</Link></li>
-            <li><Link to="/contact">Contact Us</Link></li>
-            <li><Link to="/trips">Trips</Link></li>
-          </ul>
-        </nav>
 
         {/* Route Definitions */}
         <Routes>
@@ -34,6 +39,7 @@ function App() {
       </div>
     </Router>
   );
+>>>>>>> main
 }
 
 export default App;
