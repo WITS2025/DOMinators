@@ -1,5 +1,4 @@
-// Import React (if using a version that requires it explicitly)
-// Import Bootstrap CSS
+
 import React from 'react'; // Optional: only needed if your setup requires this
 import 'bootstrap/dist/css/bootstrap.min.css';
 
