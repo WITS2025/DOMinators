@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 const Home = () => {
   const history = useHistory();
@@ -13,7 +13,7 @@ const Home = () => {
 
   return (
     <div className="container mt-5">
-      <h1 className="text-center mb-4">Discover Your Next Adventure</h1>
+      <h1 className="text-center mb-4">Plan Your Next Adventure</h1>
       
       <div className="mb-4">
         <Carousel showThumbs={false} autoPlay={true} infiniteLoop={true}>
@@ -34,7 +34,7 @@ const Home = () => {
       </div>
 
       <button className="btn btn-primary btn-block" onClick={redirectToTrips}>
-        Explore Trips
+         Plan Next Trip
       </button>
     </div>
   );
