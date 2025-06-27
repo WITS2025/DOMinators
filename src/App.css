@@ -1,42 +1,69 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ===== Global Styles ===== */
+body {
+  background-color: #F0EBE3; /* Light Sand */
+  color: #37474F; /* Slate Gray */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* ===== Custom Text Colors ===== */
+.text-forest-green {
+  color: #2E7D32 !important;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.text-slate-gray {
+  color: #37474F !important;
+}
+
+/* ===== Custom Backgrounds ===== */
+.bg-white-custom {
+  background-color: #ffffff !important;
+}
+
+.bg-light-sand {
+  background-color: #F0EBE3 !important;
+}
+.bg-terra {
+  background-color: #E07A5F !important;
+}
+
+/* ===== Custom Button ===== */
+.btn-terra {
+  background-color: #E07A5F !important;
+  color: white !important;
+  border: none;
+}
+
+.btn-terra:hover {
+  background-color: #d2694f !important;
+}
+@keyframes pulse-pop {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 123, 255, 0.5);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    transform: scale(1.07);
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 123, 255, 0.5);
   }
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.btn-pop {
+  animation: pulse-pop .85s ease-in-out infinite;
 }
 
-.card {
-  padding: 2em;
+/* ===== Form Styling ===== */
+input, textarea {
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-.read-the-docs {
-  color: #888;
+input:focus, textarea:focus {
+  border-color: #81D4FA; /* Sky Blue */
+  box-shadow: 0 0 0 0.2rem rgba(129, 212, 250, 0.25);
+  outline: none;
 }

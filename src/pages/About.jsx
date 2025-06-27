@@ -2,18 +2,22 @@
 const About = () => {
   return (
     <div className="container my-5">
-      <h2 className="text-forest-green mb-4">About TripTrek</h2>
+      <h2 className="text-center text-forest-green mb-4">About TripTrek</h2>
       <p className="lead">
         Welcome to TripTrek! We want you to be able to plan your trip as seamlessly as possible.
         Simply plan your itinerary and compare with others' itineraries to plan the ultimate trip!
         Happy traveling!
       </p>
-      <p>Did you ever wish to have your trip pre-planned instead of playing it by ear?</p>
-      <p>Do you want to avoid all fighting that sometimes happens when choosing a destination?</p>
+      <p>Ever wish your trip was perfectly planned instead of winging it day by day?</p>
+      <p>Want to skip the endless debates about where to go and what to see?</p>
       <p>
-        TripTrek will help you avoid wasting time! Have your entire trip planned in advance...and avoid the hassle!
+        With TripTrek, you can build your itinerary ahead of time, 
+        compare with friends, and create smooth, stress-free adventures from the start.
       </p>
-    </div>
+      <p className="fw-bold text-forest-green">
+        Let’s make trip planning part of the fun — and your vacation the best one yet.
+      </p>
+    </div>    
   );
 };
 

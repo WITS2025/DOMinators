@@ -204,7 +204,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       )}
 
-      <div className="mt-3">
+      <div className="mt-3 d-flex justify-content-center">
         <button type="submit" className="btn btn-terra me-2">Save</button>
         <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
       </div>
