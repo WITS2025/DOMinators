@@ -9,12 +9,10 @@ const NavigationBar = () => {
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center text-forest-green">
           <img
             src={logo}
-            alt="TripTrek Logo"
-            width="60"
-            //height="60"
+            alt="TripTrek"
+            style={{ maxHeight: '80px' }}
             className="d-inline-block align-top me-2"
           />
-          {/* <span className="fw-bold">TripTrek</span> */}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-navbar-nav" />
         <Navbar.Collapse id="main-navbar-nav">
