@@ -3,25 +3,27 @@ import { useState } from 'react'
 import TripForm from '../components/trips/TripForm'
 import TripList from '../components/trips/TripList'
 import { format, eachDayOfInterval, parse } from 'date-fns'
+import { v4 as uuidv4 } from 'uuid'
+
 
 export default function Trips() {
   const [trips, setTrips] = useState([
     {
-      id: 1,
+      id: uuidv4(),
       destination: 'Venice',
       startDate: '07/01/2025',
       endDate:   '07/02/2025',
       itinerary: [
         {
           date: '07/01/2025',
-          events: [
+          activities: [
             { time: '10:00 AM', name: 'Gondola Ride' },
             { time: '2:00 PM', name: 'Piazza San Marco' }
           ]
         },
         {
           date: '07/02/2025',
-          events: [
+          activities: [
             { time: '9:00 AM', name: 'Doge’s Palace' },
             { time: '12:00 PM', name: 'Murano Glass Tour' }
           ]
@@ -29,21 +31,21 @@ export default function Trips() {
       ]
     },
     {
-      id: 2,
+      id: uuidv4(),
       destination: 'Reykjavík',
       startDate: '07/10/2025',
       endDate:   '07/11/2025',
       itinerary: [
         {
           date: '07/10/2025',
-          events: [
+          activities: [
             { time: '11:00 AM', name: 'Blue Lagoon' },
             { time: '3:00 PM',  name: 'Sun Voyager Sculpture' }
           ]
         },
         {
           date: '07/11/2025',
-          events: [
+          activities: [
             { time: '8:00 AM',  name: 'Golden Circle Tour' },
             { time: '1:00 PM',  name: 'Perlan Museum' }
           ]
@@ -83,18 +85,18 @@ export default function Trips() {
 
     const itinerary = days.map(date => {
       const dateStr = format(date, 'MM/dd/yyyy')
-      // find any existing events for that day
-      const dayEvents =
-        trip.itinerary.find(d => d.date === dateStr)?.events || []
+      // find any existing activities for that day
+      const dayActivities =
+        trip.itinerary.find(d => d.date === dateStr)?.activities || []
 
-      // sort events by time ascending
-      const sortedEvents = [...dayEvents].sort((a, b) => {
+      // sort activities by time ascending
+      const sortedActivities = [...dayActivities].sort((a, b) => {
         const a24 = convertTo24Hour(a.time)
         const b24 = convertTo24Hour(b.time)
         return a24.localeCompare(b24)
       })
 
-      return { date: dateStr, events: sortedEvents }
+      return { date: dateStr, activities: sortedActivities }
     })
 
     const finalTrip = { ...trip, itinerary }
@@ -104,7 +106,7 @@ export default function Trips() {
       setTrips(trips.map(t => (t.id === trip.id ? finalTrip : t)))
     } else {
       // new trip
-      finalTrip.id = Date.now()
+      finalTrip.id = uuidv4()
       setTrips([...trips, finalTrip])
     }
 
@@ -178,9 +180,9 @@ export default function Trips() {
               className="mb-4 p-4 bg-white-custom rounded shadow-sm"
             >
               <h5 className="text-forest-green">{dayPlan.date}</h5>
-              {dayPlan.events.length > 0 && (
+              {dayPlan.activities.length > 0 && (
                 <ul className="list-unstyled">
-                  {dayPlan.events.map((ev, i) => (
+                  {dayPlan.activities.map((ev, i) => (
                     <li key={i} className="d-flex mb-1">
                       <div
                         className="me-3 text-end"
