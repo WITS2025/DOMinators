@@ -114,14 +114,14 @@ export default function Trips() {
 
   return (
     <div className="container bg-light-sand py-5 text-slate-gray">
-      <h2 className="mb-4 text-forest-green">
+      <h2 className="text-center mb-4 text-forest-green">
         {selectedTrip && !editingTrip ? 'Itinerary' : 'Destinations'}
       </h2>
 
       {!selectedTrip && !editingTrip && (
         <>
           <button
-            className="btn btn-terra mb-4"
+            className="btn btn-terra mb-4 d-block mx-auto"
             onClick={() =>
               setEditingTrip({
                 destination: '',
@@ -154,20 +154,22 @@ export default function Trips() {
 
       {selectedTrip && !editingTrip && (
         <div>
-          <button
-            className="btn btn-secondary mb-3 me-2"
-            onClick={() => setSelectedTrip(null)}
-          >
-            &larr; Back
-          </button>
-          <button
-            className="btn btn-terra mb-3 me-2"
-            onClick={() => setEditingTrip(selectedTrip)}
-          >
-            Edit
-          </button>
+          <div className="d-flex justify-content-center mb-3">
+            <button
+              className="btn btn-secondary mb-3 me-2"
+              onClick={() => setSelectedTrip(null)}
+            >
+              &larr; Back
+            </button>
+            <button
+              className="btn btn-terra mb-3 me-2"
+              onClick={() => setEditingTrip(selectedTrip)}
+            >
+              Edit
+            </button>
+          </div>
 
-          <h4 className="text-forest-green mb-3">
+          <h4 className="text-forest-green mb-3 text-center">
             {selectedTrip.destination} — {selectedTrip.startDate} to{' '}
             {selectedTrip.endDate}
           </h4>
