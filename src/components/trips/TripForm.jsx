@@ -10,8 +10,8 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [startDate, setStartDate] = useState(trip.startDate || '');
   const [endDate, setEndDate] = useState(trip.endDate || '');
   const [itinerary, setItinerary] = useState(trip.itinerary || []);
-  const [newEventTime, setNewEventTime] = useState({});
-  const [newEventName, setNewEventName] = useState({});
+  const [newActivityTime, setNewActivityTime] = useState({});
+  const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
 
   // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
@@ -41,7 +41,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
           const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
           return days.map(date => {
             const dateStr = format(date, 'MM/dd/yyyy');
-            return prevMap[dateStr] || { date: dateStr, events: [] };
+            return prevMap[dateStr] || { date: dateStr, activities: [] };
           });
         });
       } else {
@@ -52,9 +52,9 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
   }, [startDate, endDate]);
 
-  const handleAddEvent = (date) => {
-    const time = newEventTime[date];
-    const name = newEventName[date];
+  const handleAddActivity = (date) => {
+    const time = newActivityTime[date];
+    const name = newActivityName[date];
     if (!time || !name) return;
 
     const formattedTime = formatTime12Hour(time);
@@ -63,7 +63,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
       prev.map(day => {
         if (day.date !== date) return day;
 
-        const updatedEvents = [...day.events, { time: formattedTime, name }].sort((a, b) => {
+        const updatedActivities = [...day.activities, { time: formattedTime, name }].sort((a, b) => {
           const parseTime = (str) => {
             const [t, mod] = str.split(' ');
             let [h, m] = t.split(':');
@@ -74,12 +74,12 @@ export default function TripForm({ trip, onSave, onCancel }) {
           return parseTime(a.time).localeCompare(parseTime(b.time));
         });
 
-        return { ...day, events: updatedEvents };
+        return { ...day, activities: updatedActivities };
       })
     );
 
-    setNewEventTime({ ...newEventTime, [date]: '' });
-    setNewEventName({ ...newEventName, [date]: '' });
+    setNewActivityTime({ ...newActivityTime, [date]: '' });
+    setNewActivityName({ ...newActivityName, [date]: '' });
   };
 
   const formatTime12Hour = (timeStr) => {
@@ -90,11 +90,11 @@ export default function TripForm({ trip, onSave, onCancel }) {
     return `${displayHour}:${minute} ${suffix}`;
   };
 
-  const handleRemoveEvent = (date, index) => {
+  const handleRemoveActivity = (date, index) => {
     setItinerary(prev =>
       prev.map(day =>
         day.date === date
-          ? { ...day, events: day.events.filter((_, i) => i !== index) }
+          ? { ...day, activities: day.activities.filter((_, i) => i !== index) }
           : day
       )
     );
@@ -108,7 +108,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
     const itineraryToSave = itinerary.map(day => ({
       date: day.date,
-      events: [...day.events]
+      activities: [...day.activities]
     }));
     onSave({
       ...trip,
@@ -163,13 +163,13 @@ export default function TripForm({ trip, onSave, onCancel }) {
             <div key={i} className="border rounded p-3 mb-3">
               <strong>{day.date}</strong>
               <ul className="list-unstyled">
-                {day.events.map((event, j) => (
+                {day.activities.map((activity, j) => (
                   <li key={j}>
-                    {event.time} — {event.name}
+                    {activity.time} — {activity.name}
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger ms-2"
-                      onClick={() => handleRemoveEvent(day.date, j)}
+                      onClick={() => handleRemoveActivity(day.date, j)}
                     >
                       Remove
                     </button>
@@ -181,22 +181,22 @@ export default function TripForm({ trip, onSave, onCancel }) {
                   disableClock={true}
                   clearIcon={null}
                   format="h:mm a"
-                  value={newEventTime[day.date] || ''}
-                  onChange={(val) => setNewEventTime({ ...newEventTime, [day.date]: val })}
+                  value={newActivityTime[day.date] || ''}
+                  onChange={(val) => setNewActivityTime({ ...newActivityTime, [day.date]: val })}
                 />
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Event Description"
-                  value={newEventName[day.date] || ''}
-                  onChange={(e) => setNewEventName({ ...newEventName, [day.date]: e.target.value })}
+                  placeholder="Activity Description"
+                  value={newActivityName[day.date] || ''}
+                  onChange={(e) => setNewActivityName({ ...newActivityName, [day.date]: e.target.value })}
                 />
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-primary"
-                  onClick={() => handleAddEvent(day.date)}
+                  onClick={() => handleAddActivity(day.date)}
                 >
-                  + Add Event
+                  + Add Activity
                 </button>
               </div>
             </div>
