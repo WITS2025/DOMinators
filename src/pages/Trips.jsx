@@ -204,3 +204,17 @@ export default function Trips() {
     </div>
   )
 }
+async function getTrip(tripId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}?tripId=${encodeURIComponent(tripId)}`);
+    if (!response.ok) {
+      throw new Error(`Error fetching trip: ${response.statusText}`);
+    }
+    const tripData = await response.json();
+    console.log("Trip data:", tripData);
+    return tripData;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
