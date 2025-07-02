@@ -208,7 +208,7 @@ export default function Trips() {
 
 const API_BASE_URL = "https://8897l70kc2.execute-api.us-east-1.amazonaws.com/dev/trip";
 
-export default function TripFetcher() {
+export  function TripFetcher() {
   const [tripId, setTripId] = useState("");
   const [trip, setTrip] = useState(null);
   const [error, setError] = useState(null);
