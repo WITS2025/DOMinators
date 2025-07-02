@@ -204,7 +204,7 @@ export default function Trips() {
     </div>
   )
 }
-import React, { useState } from "react";
+
 
 const API_BASE_URL = "https://8897l70kc2.execute-api.us-east-1.amazonaws.com/dev/trip";
 
