@@ -58,10 +58,24 @@ export default function Trips() {
   const [editingTrip, setEditingTrip] = useState(null)
 
   // DELETE
-  const handleDelete = (id) => {
-    setTrips(trips.filter(t => t.id !== id))
-    setSelectedTrip(null)
-  }
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete trip. Status: ${response.status}`);
+      }
+
+      // Update UI after successful deletion
+      setTrips(trips.filter(t => t.id !== id));
+      setSelectedTrip(null);
+    } catch (err) {
+      console.error('Error deleting trip:', err);
+      alert('Failed to delete trip. Please try again.');
+    }
+  };
 
   // helper to parse MM/DD/YYYY → Date
   const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
