@@ -81,7 +81,7 @@ export default function Trips() {
       const res = await fetch(
         `https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=${encodeURIComponent(tripId)}`,
         {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ attributeName, newValue })
         }
