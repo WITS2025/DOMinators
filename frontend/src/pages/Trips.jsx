@@ -167,7 +167,30 @@ export default function Trips() {
       setTrips(trips.map(t => (t.id === trip.id ? finalTrip : t)))
     } else {
       // new trip
+      const saveTrip = async () => {
+        try {
+          const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/createTrip', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(finalTrip),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Trip successfully created:', data);
+          alert('Trip created successfully!');
+        } catch (error) {
+          console.error('Error creating trip:', error);
+          alert('Failed to create trip.');
+        }
+      };
       finalTrip.id = uuidv4()
+      saveTrip();
       setTrips([...trips, finalTrip])
     }
 
