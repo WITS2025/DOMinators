@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 export default function Trips() {
   const [trips, setTrips] = useState([
     {
-      id: uuidv4(),
+      id: 'test-trip',
       destination: 'Venice',
       startDate: '07/01/2025',
       endDate:   '07/02/2025',
@@ -58,10 +58,24 @@ export default function Trips() {
   const [editingTrip, setEditingTrip] = useState(null)
 
   // DELETE
-  const handleDelete = (id) => {
-    setTrips(trips.filter(t => t.id !== id))
-    setSelectedTrip(null)
-  }
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete trip. Status: ${response.status}`);
+      }
+
+      // Update UI after successful deletion
+      setTrips(trips.filter(t => t.id !== id));
+      setSelectedTrip(null);
+    } catch (err) {
+      console.error('Error deleting trip:', err);
+      alert('Failed to delete trip. Please try again.');
+    }
+  };
 
   // helper to parse MM/DD/YYYY → Date
   const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
@@ -73,6 +87,31 @@ export default function Trips() {
     if (mod === 'PM' && h !== '12') h = String(+h + 12)
     if (mod === 'AM' && h === '12') h = '00'
     return `${h.padStart(2, '0')}:${m}`
+  }
+
+  // UPDATE with API call
+  const updateTripAPI = async (tripId, attributeName, newValue) => {
+    try {
+      const res = await fetch(
+        `https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=${encodeURIComponent(tripId)}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attributeName, newValue })
+        }
+      )
+
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(`API error: ${res.status} ${errText}`)
+      }
+
+      const result = await res.json()
+      console.log('Trip updated via API:', result)
+      return result
+    } catch (err) {
+      console.error('API call failed:', err)
+    }
   }
 
   // SAVE (new or edit)
@@ -102,7 +141,29 @@ export default function Trips() {
     const finalTrip = { ...trip, itinerary }
 
     if (trip.id) {
-      // update existing
+      // use API call to update backend
+      const existingTrip = trips.find(t => t.id === trip.id)
+      if (existingTrip) {
+        if (existingTrip.destination !== trip.destination) {
+          updateTripAPI(trip.id, 'destination', finalTrip.destination)
+        }
+
+        if (existingTrip.startDate !== trip.startDate) {
+          updateTripAPI(trip.id, 'startDate', trip.startDate)
+        }
+
+        if (existingTrip.endDate !== trip.endDate) {
+          updateTripAPI(trip.id, 'endDate', trip.endDate)
+        }
+
+        if (
+          JSON.stringify(existingTrip.itinerary) !==
+          JSON.stringify(finalTrip.itinerary)
+        ) {
+          updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
+        }
+      }
+      // update state
       setTrips(trips.map(t => (t.id === trip.id ? finalTrip : t)))
     } else {
       // new trip
