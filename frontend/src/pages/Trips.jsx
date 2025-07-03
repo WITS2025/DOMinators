@@ -150,12 +150,11 @@ export default function Trips() {
           updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
-      // update state
-      setTrips(trips.map(t => (t.id === trip.id ? finalTrip : t)))
+   
     } else {
       // new trip
       finalTrip.id = uuidv4();
-      setTrips([...trips, finalTrip])
+     
     }
     // re-fetch from backend after save
     await fetchTrips();
