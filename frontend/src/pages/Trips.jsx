@@ -1,85 +1,72 @@
 // src/pages/Trips.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TripForm from '../components/trips/TripForm'
 import TripList from '../components/trips/TripList'
 import { format, eachDayOfInterval, parse } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
-
-
+ 
+ 
 export default function Trips() {
-  const [trips, setTrips] = useState([
-    {
-      id: 'test-trip',
-      destination: 'Venice',
-      startDate: '07/01/2025',
-      endDate:   '07/02/2025',
-      itinerary: [
-        {
-          date: '07/01/2025',
-          activities: [
-            { time: '10:00 AM', name: 'Gondola Ride' },
-            { time: '2:00 PM', name: 'Piazza San Marco' }
-          ]
-        },
-        {
-          date: '07/02/2025',
-          activities: [
-            { time: '9:00 AM', name: 'Doge’s Palace' },
-            { time: '12:00 PM', name: 'Murano Glass Tour' }
-          ]
-        }
-      ]
-    },
-    {
-      id: uuidv4(),
-      destination: 'Reykjavík',
-      startDate: '07/10/2025',
-      endDate:   '07/11/2025',
-      itinerary: [
-        {
-          date: '07/10/2025',
-          activities: [
-            { time: '11:00 AM', name: 'Blue Lagoon' },
-            { time: '3:00 PM',  name: 'Sun Voyager Sculpture' }
-          ]
-        },
-        {
-          date: '07/11/2025',
-          activities: [
-            { time: '8:00 AM',  name: 'Golden Circle Tour' },
-            { time: '1:00 PM',  name: 'Perlan Museum' }
-          ]
-        }
-      ]
-    }
-  ])
-
+ 
+  const [trips, setTrips] = useState([])
+ 
+  // RETRIEVE ALL
+  const fetchTrips = async () => {
+  try {
+    const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/getTripList', {
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error(`Failed to load trips: ${response.status}`)
+ 
+    const data = await response.json()
+ 
+    const tripsWithSortedItinerary = data.map(trip => ({
+      ...trip,
+      id: trip.pk,
+      itinerary: trip.itinerary?.map(day => ({
+        ...day,
+        activities: [...(day.activities || [])].sort((a, b) => {
+          const aTime = convertTo24Hour(a.time)
+          const bTime = convertTo24Hour(b.time)
+          return aTime.localeCompare(bTime)
+        })
+      })) || []
+    }))
+ 
+    setTrips(tripsWithSortedItinerary)
+  } catch (err) {
+    console.error('Error fetching trips:', err)
+  }
+}
+ 
+  useEffect(() => { fetchTrips()}, [])
+ 
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
-
+ 
   // DELETE
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
         method: 'DELETE',
       });
-
+ 
       if (!response.ok) {
         throw new Error(`Failed to delete trip. Status: ${response.status}`);
       }
-
+ 
       // Update UI after successful deletion
-      setTrips(trips.filter(t => t.id !== id));
+      await fetchTrips() // refresh from backend
       setSelectedTrip(null);
     } catch (err) {
       console.error('Error deleting trip:', err);
       alert('Failed to delete trip. Please try again.');
     }
   };
-
+ 
   // helper to parse MM/DD/YYYY → Date
   const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
-
+ 
   // helper to convert 12h → 24h HH:mm
   const convertTo24Hour = timeStr => {
     const [time, mod] = timeStr.split(' ')
@@ -88,7 +75,7 @@ export default function Trips() {
     if (mod === 'AM' && h === '12') h = '00'
     return `${h.padStart(2, '0')}:${m}`
   }
-
+ 
   // UPDATE with API call
   const updateTripAPI = async (tripId, attributeName, newValue) => {
     try {
@@ -100,12 +87,12 @@ export default function Trips() {
           body: JSON.stringify({ attributeName, newValue })
         }
       )
-
+ 
       if (!res.ok) {
         const errText = await res.text()
         throw new Error(`API error: ${res.status} ${errText}`)
       }
-
+ 
       const result = await res.json()
       console.log('Trip updated via API:', result)
       return result
@@ -113,33 +100,33 @@ export default function Trips() {
       console.error('API call failed:', err)
     }
   }
-
+ 
   // SAVE (new or edit)
-  const handleSave = trip => {
+  const handleSave = async(trip) => {
     // regenerate the complete itinerary with every date from start → end
     const days = eachDayOfInterval({
       start: parseMDY(trip.startDate),
       end:   parseMDY(trip.endDate)
     })
-
+ 
     const itinerary = days.map(date => {
       const dateStr = format(date, 'MM/dd/yyyy')
       // find any existing activities for that day
       const dayActivities =
         trip.itinerary.find(d => d.date === dateStr)?.activities || []
-
+ 
       // sort activities by time ascending
       const sortedActivities = [...dayActivities].sort((a, b) => {
         const a24 = convertTo24Hour(a.time)
         const b24 = convertTo24Hour(b.time)
         return a24.localeCompare(b24)                                
       })
-
+ 
       return { date: dateStr, activities: sortedActivities }
     })
-
+ 
     const finalTrip = { ...trip, itinerary }
-
+ 
     if (trip.id) {
       // use API call to update backend
       const existingTrip = trips.find(t => t.id === trip.id)
@@ -147,15 +134,15 @@ export default function Trips() {
         if (existingTrip.destination !== trip.destination) {
           updateTripAPI(trip.id, 'destination', finalTrip.destination)
         }
-
+ 
         if (existingTrip.startDate !== trip.startDate) {
           updateTripAPI(trip.id, 'startDate', trip.startDate)
         }
-
+ 
         if (existingTrip.endDate !== trip.endDate) {
           updateTripAPI(trip.id, 'endDate', trip.endDate)
         }
-
+ 
         if (
           JSON.stringify(existingTrip.itinerary) !==
           JSON.stringify(finalTrip.itinerary)
@@ -163,24 +150,25 @@ export default function Trips() {
           updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
-      // update state
-      setTrips(trips.map(t => (t.id === trip.id ? finalTrip : t)))
+   
     } else {
       // new trip
-      finalTrip.id = uuidv4()
-      setTrips([...trips, finalTrip])
+      finalTrip.id = uuidv4();
+     
     }
-
+    // re-fetch from backend after save
+    await fetchTrips();
+   
     setEditingTrip(null)
     setSelectedTrip(null)
   }
-
+ 
   return (
     <div className="container bg-light-sand py-5 text-slate-gray">
       <h2 className="text-center mb-4 text-forest-green">
         {selectedTrip && !editingTrip ? 'Itinerary' : 'Destinations'}
       </h2>
-
+ 
       {!selectedTrip && !editingTrip && (
         <>
           <button
@@ -196,17 +184,21 @@ export default function Trips() {
           >
             + New Trip
           </button>
-
+ 
           <div className="mx-auto" style={{ maxWidth: '500px' }}>
-            <TripList
-              trips={trips}
-              onSelect={setSelectedTrip}
-              onDelete={handleDelete}
-            />
+            {trips.length === 0 ? (
+              <p className="text-center">No trips yet. Start trekking!</p>
+            ) : (
+              <TripList
+                trips={trips}
+                onSelect={setSelectedTrip}
+                onDelete={handleDelete}
+              />
+            )}
           </div>
         </>
       )}
-
+ 
       {editingTrip && (
         <TripForm
           trip={editingTrip}
@@ -214,7 +206,7 @@ export default function Trips() {
           onCancel={() => setEditingTrip(null)}
         />
       )}
-
+ 
       {selectedTrip && !editingTrip && (
         <div>
           <div className="d-flex justify-content-center mb-3">
@@ -231,12 +223,12 @@ export default function Trips() {
               Edit
             </button>
           </div>
-
+ 
           <h4 className="text-forest-green mb-3 text-center">
             {selectedTrip.destination} — {selectedTrip.startDate} to{' '}
             {selectedTrip.endDate}
           </h4>
-
+ 
           {selectedTrip.itinerary.map((dayPlan, idx) => (
             <div
               key={idx}
