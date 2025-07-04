@@ -115,7 +115,7 @@ export default function Trips() {
   }
 
   // SAVE (new or edit)
-  const handleSave = trip => {
+  const handleSave = async trip => {
     // regenerate the complete itinerary with every date from start → end
     const days = eachDayOfInterval({
       start: parseMDY(trip.startDate),
@@ -145,22 +145,22 @@ export default function Trips() {
       const existingTrip = trips.find(t => t.id === trip.id)
       if (existingTrip) {
         if (existingTrip.destination !== trip.destination) {
-          updateTripAPI(trip.id, 'destination', finalTrip.destination)
+          await updateTripAPI(trip.id, 'destination', finalTrip.destination)
         }
 
         if (existingTrip.startDate !== trip.startDate) {
-          updateTripAPI(trip.id, 'startDate', trip.startDate)
+          await updateTripAPI(trip.id, 'startDate', trip.startDate)
         }
 
         if (existingTrip.endDate !== trip.endDate) {
-          updateTripAPI(trip.id, 'endDate', trip.endDate)
+          await updateTripAPI(trip.id, 'endDate', trip.endDate)
         }
 
         if (
           JSON.stringify(existingTrip.itinerary) !==
           JSON.stringify(finalTrip.itinerary)
         ) {
-          updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
+          await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
       // update state
@@ -185,14 +185,14 @@ export default function Trips() {
           console.log('Trip successfully created:', data);
           alert('Trip created successfully!');
         } catch (error) {
-          console.error('Error creating trip:', error);
+          console.error('Error creating trip:', error);       
           alert('Failed to create trip.');
         }
       };
       finalTrip.id = uuidv4()
-      saveTrip();
-      setTrips([...trips, finalTrip])
+      await saveTrip();
     }
+    await fetchTrips();
 
     setEditingTrip(null)
     setSelectedTrip(null)
@@ -202,7 +202,7 @@ export default function Trips() {
     <div className="container bg-light-sand py-5 text-slate-gray">
       <h2 className="text-center mb-4 text-forest-green">
         {selectedTrip && !editingTrip ? 'Itinerary' : 'Destinations'}
-      </h2>
+      </h2>                                   
 
       {!selectedTrip && !editingTrip && (
         <>
