@@ -20,19 +20,18 @@ export const handler = async (event) => {
   }
  
   // Extract values from DynamoDB format
-  const tripID = body.tripID.S;
-  const destination = body.destination.S;
-  const startDate = body.startDate.S;
-  const endDate = body.endDate.S;
+  const { destination, startDate, endDate } = body;
 
-  const itinerary = body.itinerary?.L?.map(item => ({
-    date: item.M.date?.S,
-    activities: item.M.activities?.L?.map(activity => ({
-      name: activity.M.name?.S,
-      time: activity.M.time?.S,
-    })) || [],
-  })) || [];
- 
+  const tripID = body.id; // frontend sends "id" not "tripID"
+
+  const itinerary = (body.itinerary || []).map(item => ({
+    date: item.date,
+    activities: (item.activities || []).map(activity => ({
+      name: activity.name,
+      time: activity.time,
+    })),
+  }));
+
   // Validate required fields
   if (!tripID || !destination || !startDate || !endDate || !itinerary) {
     return {
@@ -151,3 +150,4 @@ export const handler = async (event) => {
     };
   }
 };
+
