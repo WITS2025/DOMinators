@@ -22,7 +22,7 @@ Resources:
         ApiForMyApp:
           Type: HttpApi
           Properties:
-            Path: /create
+            Path: /createTrip
             Method: POST
             ApiId: !Ref TripTrek-API
             
