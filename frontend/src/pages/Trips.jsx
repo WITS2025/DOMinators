@@ -257,7 +257,7 @@ export default function Trips() {
               className="mb-4 p-4 bg-white-custom rounded shadow-sm"
             >
               <h5 className="text-forest-green">{dayPlan.date}</h5>
-              {dayPlan.activities.length > 0 && (
+              {Array.isArray(dayPlan.activities) && dayPlan.activities.length > 0 ? (
                 <ul className="list-unstyled">
                   {dayPlan.activities.map((ev, i) => (
                     <li key={i} className="d-flex mb-1">
@@ -271,6 +271,8 @@ export default function Trips() {
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <div className="text-muted">No activities planned for this day.</div>
               )}
             </div>
           ))}
