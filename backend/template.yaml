@@ -44,6 +44,24 @@ Resources:
             Method: PATCH
             ApiId: !Ref TripTrek-API
 
+  deleteTrip:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: deleteTrip
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: delete/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /deleteTrip
+            Method: DELETE
+            ApiId: !Ref TripTrek-API
+
 Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
