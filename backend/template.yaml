@@ -26,6 +26,24 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrek-API
 
+getTripList:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getTripList
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: retrieve/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /getTripList
+            Method: GET
+            ApiId: !Ref TripTrek-API
+  
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
