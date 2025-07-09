@@ -132,29 +132,51 @@ export default function Trips() {
       const existingTrip = trips.find(t => t.id === trip.id)
       if (existingTrip) {
         if (existingTrip.destination !== trip.destination) {
-          updateTripAPI(trip.id, 'destination', finalTrip.destination)
+          await updateTripAPI(trip.id, 'destination', finalTrip.destination)
         }
  
         if (existingTrip.startDate !== trip.startDate) {
-          updateTripAPI(trip.id, 'startDate', trip.startDate)
+          await updateTripAPI(trip.id, 'startDate', trip.startDate)
         }
  
         if (existingTrip.endDate !== trip.endDate) {
-          updateTripAPI(trip.id, 'endDate', trip.endDate)
+          await updateTripAPI(trip.id, 'endDate', trip.endDate)
         }
  
         if (
           JSON.stringify(existingTrip.itinerary) !==
           JSON.stringify(finalTrip.itinerary)
         ) {
-          updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
+          await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
    
     } else {
       // new trip
-      finalTrip.id = uuidv4();
-     
+      const saveTrip = async () => {
+        try {
+          const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/createTrip', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(finalTrip),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Trip successfully created:', data);
+          alert('Trip created successfully!');
+        } catch (error) {
+          console.error('Error creating trip:', error);       
+          alert('Failed to create trip.');
+        }
+      };
+      finalTrip.id = uuidv4()
+      await saveTrip();
     }
     // re-fetch from backend after save
     await fetchTrips();
@@ -167,8 +189,8 @@ export default function Trips() {
     <div className="container bg-light-sand py-5 text-slate-gray">
       <h2 className="text-center mb-4 text-forest-green">
         {selectedTrip && !editingTrip ? 'Itinerary' : 'Destinations'}
-      </h2>
- 
+      </h2>                                   
+
       {!selectedTrip && !editingTrip && (
         <>
           <button
