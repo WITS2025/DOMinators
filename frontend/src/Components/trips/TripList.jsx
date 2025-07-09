@@ -2,7 +2,8 @@
 export default function TripList({ trips, onSelect, onDelete }) {
   return (
     <div className="list-group">
-      {trips.map(trip => (
+      {trips.length === 0 && <div className="text-center">No trips saved. Start trekking!</div>}
+      {trips.map((trip) => (
         <div
           key={trip.id}
           className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-3 py-3"
@@ -10,7 +11,7 @@ export default function TripList({ trips, onSelect, onDelete }) {
           <div
             className="flex-grow-1 text-center"
             onClick={() => onSelect(trip)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
           >
             <strong>{trip.destination}</strong>
             <br />
@@ -27,5 +28,5 @@ export default function TripList({ trips, onSelect, onDelete }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
