@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: Lambda + API Gateway using SAM
 
 Resources:
-  TripTrek-API:
+  TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
       Name: TripTrek-API
@@ -24,7 +24,7 @@ Resources:
           Properties:
             Path: /createTrip
             Method: POST
-            ApiId: !Ref TripTrek-API
+            ApiId: !Ref TripTrekAPI
 
   getTripList:
     Type: AWS::Serverless::Function
@@ -42,7 +42,7 @@ Resources:
           Properties:
             Path: /getTripList
             Method: GET
-            ApiId: !Ref TripTrek-API
+            ApiId: !Ref TripTrekAPI
   
   updateTrip:
     Type: AWS::Serverless::Function
@@ -60,7 +60,7 @@ Resources:
           Properties:
             Path: /updateTrip
             Method: PATCH
-            ApiId: !Ref TripTrek-API
+            ApiId: !Ref TripTrekAPI
 
   deleteTrip:
     Type: AWS::Serverless::Function
@@ -78,9 +78,9 @@ Resources:
           Properties:
             Path: /deleteTrip
             Method: DELETE
-            ApiId: !Ref TripTrek-API
+            ApiId: !Ref TripTrekAPI
 
 Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
-    Value: !Sub "https://${TripTrek-API}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
