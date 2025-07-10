@@ -2,7 +2,7 @@
 export default function TripList({ trips, onSelect, onDelete }) {
   return (
     <div className="list-group">
-      {trips.length === 0 && <div className="text-center">No trips saved. Start trekking!</div>}
+      {trips.length === 0 && <div className="text-center">No trips planned yet. Start trekking!</div>}
       {trips.map((trip) => (
         <div
           key={trip.id}

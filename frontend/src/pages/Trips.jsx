@@ -136,13 +136,16 @@ export default function Trips() {
       if (existingTrip) {
         if (existingTrip.destination !== trip.destination) {
           await updateTripAPI(trip.id, 'destination', finalTrip.destination)
+          await updateTripAPI(trip.id, 'destination', finalTrip.destination)
         }
  
         if (existingTrip.startDate !== trip.startDate) {
           await updateTripAPI(trip.id, 'startDate', trip.startDate)
+          await updateTripAPI(trip.id, 'startDate', trip.startDate)
         }
  
         if (existingTrip.endDate !== trip.endDate) {
+          await updateTripAPI(trip.id, 'endDate', trip.endDate)
           await updateTripAPI(trip.id, 'endDate', trip.endDate)
         }
  
@@ -150,6 +153,7 @@ export default function Trips() {
           JSON.stringify(existingTrip.itinerary) !==
           JSON.stringify(finalTrip.itinerary)
         ) {
+          await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
           await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
@@ -266,7 +270,7 @@ export default function Trips() {
               className="mb-4 p-4 bg-white-custom rounded shadow-sm"
             >
               <h5 className="text-forest-green">{dayPlan.date}</h5>
-              {dayPlan.activities.length > 0 && (
+              {Array.isArray(dayPlan.activities) && dayPlan.activities.length > 0 ? (
                 <ul className="list-unstyled">
                   {dayPlan.activities.map((ev, i) => (
                     <li key={i} className="d-flex mb-1">
@@ -280,6 +284,8 @@ export default function Trips() {
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <div className="text-muted">No activities planned for this day.</div>
               )}
             </div>
           ))}
