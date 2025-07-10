@@ -1,0 +1,19 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "TripTrekStack"
+resolve_s3 = false                  # does not create new bucket
+s3_bucket = "wits-sam-deployments"
+s3_prefix = "TripTrekStack"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+disable_rollback = true
+image_repositories = []
+
+[default.build.parameters]
+cached = true
+parallel = true
+use_container = false
