@@ -136,16 +136,13 @@ export default function Trips() {
       if (existingTrip) {
         if (existingTrip.destination !== trip.destination) {
           await updateTripAPI(trip.id, 'destination', finalTrip.destination)
-          await updateTripAPI(trip.id, 'destination', finalTrip.destination)
         }
  
         if (existingTrip.startDate !== trip.startDate) {
           await updateTripAPI(trip.id, 'startDate', trip.startDate)
-          await updateTripAPI(trip.id, 'startDate', trip.startDate)
         }
  
         if (existingTrip.endDate !== trip.endDate) {
-          await updateTripAPI(trip.id, 'endDate', trip.endDate)
           await updateTripAPI(trip.id, 'endDate', trip.endDate)
         }
  
@@ -153,7 +150,6 @@ export default function Trips() {
           JSON.stringify(existingTrip.itinerary) !==
           JSON.stringify(finalTrip.itinerary)
         ) {
-          await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
           await updateTripAPI(trip.id, 'itinerary', finalTrip.itinerary)
         }
       }
