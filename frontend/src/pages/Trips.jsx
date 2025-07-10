@@ -13,6 +13,8 @@ export default function Trips() {
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
 
+  const apiEndpoint = "https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/"
+
   // helper to parse MM/DD/YYYY → Date
   const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
  
@@ -29,7 +31,7 @@ export default function Trips() {
   const fetchTrips = async () => {
   setLoading(true)
   try {
-    const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/getTripList', {
+    const response = await fetch(apiEndpoint + 'getTripList', {
       method: 'GET',
     });
     if (!response.ok) throw new Error(`Failed to load trips: ${response.status}`)
@@ -62,7 +64,7 @@ export default function Trips() {
   // DELETE
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
+      const response = await fetch(apiEndpoint + 'deleteTrip?tripId=${id}', {
         method: 'DELETE',
       });
  
@@ -83,7 +85,7 @@ export default function Trips() {
   const updateTripAPI = async (tripId, attributeName, newValue) => {
     try {
       const res = await fetch(
-        `https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=${encodeURIComponent(tripId)}`,
+        apiEndpoint + 'updateTrip?tripId=${encodeURIComponent(tripId)}',
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -158,7 +160,7 @@ export default function Trips() {
       // new trip
       const saveTrip = async () => {
         try {
-          const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/createTrip', {
+          const response = await fetch(apiEndpoint + 'createTrip', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
