@@ -119,7 +119,7 @@ export default function Trips() {
       const sortedActivities = [...dayActivities].sort((a, b) => {
         const a24 = convertTo24Hour(a.time)
         const b24 = convertTo24Hour(b.time)
-        return a24.localeCompare(b24)
+        return a24.localeCompare(b24)                                
       })
  
       return { date: dateStr, activities: sortedActivities }
