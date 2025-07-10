@@ -202,12 +202,12 @@ export default function Trips() {
       </h2>
 
       {loading && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style={{ zIndex: 1050 }}>
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ zIndex: 1050 }}>
           <div className="spinner-border text-terra" role="status"></div>
         </div>
       )}
 
-      {!selectedTrip && !editingTrip && (
+      {!selectedTrip && !editingTrip && !loading &&(
         <>
           <button
             className="btn btn-terra mb-4 d-block mx-auto"
