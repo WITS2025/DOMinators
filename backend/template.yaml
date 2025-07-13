@@ -41,7 +41,7 @@ Resources:
     Properties:
       FunctionName: getTripList
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:

@@ -6,12 +6,22 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       Name: TripTrekAPI
+      CorsConfiguration:
+        AllowMethods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+        AllowOrigins:
+        - '*'
+        AllowHeaders:
+        - '*'
   createTrip:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: createTrip
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: createTrip
       Policies:
       - DynamoDBCrudPolicy:
@@ -31,7 +41,7 @@ Resources:
     Properties:
       FunctionName: getTripList
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: getTripList
       Policies:
       - DynamoDBCrudPolicy:
@@ -51,7 +61,7 @@ Resources:
     Properties:
       FunctionName: updateTrip
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: updateTrip
       Policies:
       - DynamoDBCrudPolicy:
@@ -71,7 +81,7 @@ Resources:
     Properties:
       FunctionName: deleteTrip
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: deleteTrip
       Policies:
       - DynamoDBCrudPolicy:
