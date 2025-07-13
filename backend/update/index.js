@@ -6,6 +6,11 @@ import {
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+};
 
 export const handler = async (event) => {
   console.log("Event received:", event);
@@ -15,6 +20,7 @@ export const handler = async (event) => {
   if (!tripId) {
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify("Missing 'tripId' in query string"),
     };
   }
@@ -25,6 +31,7 @@ export const handler = async (event) => {
   } catch {
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify("Invalid JSON body"),
     };
   }
@@ -34,6 +41,7 @@ export const handler = async (event) => {
   if (!attributeName || typeof newValue === 'undefined') {
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify("Missing 'attributeName' or 'newValue' in body"),
     };
   }
@@ -55,12 +63,14 @@ export const handler = async (event) => {
     const data = await ddbDocClient.send(new UpdateCommand(params));
     return {
       statusCode: 200,
+      headers: CORS_HEADERS,
       body: JSON.stringify(data.Attributes),
     };
   } catch (err) {
     console.error("Error updating item in DynamoDB", err);
     return {
       statusCode: 500,
+      headers: CORS_HEADERS,
       body: JSON.stringify("Error updating item in DynamoDB"),
     };
   }
