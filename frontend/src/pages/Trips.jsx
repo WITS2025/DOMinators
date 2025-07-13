@@ -14,7 +14,7 @@ export default function Trips() {
   // RETRIEVE ALL
   const fetchTrips = async () => {
   try {
-    const response = await fetch(API_Endpoint + 'getTripList', {
+    const response = await fetch(`${API_Endpoint}getTripList`, {
       method: 'GET',
     });
     if (!response.ok) throw new Error(`Failed to load trips: ${response.status}`)
@@ -48,7 +48,7 @@ export default function Trips() {
   // DELETE
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(API_Endpoint + 'deleteTrip?tripId=${id}', {
+      const response = await fetch(`${API_Endpoint}deleteTrip?tripId=${id}`, {
         method: 'DELETE',
       });
  
@@ -80,7 +80,7 @@ export default function Trips() {
   // UPDATE with API call
   const updateTripAPI = async (tripId, attributeName, newValue) => {
     try {
-      const res = await fetch( API_Endpoint + 'updateTrip?tripId=${encodeURIComponent(tripId)}',
+      const res = await fetch(`${API_Endpoint}updateTrip?tripId=${encodeURIComponent(tripId)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -155,7 +155,7 @@ export default function Trips() {
       // new trip
       const saveTrip = async () => {
         try {
-          const response = await fetch(API_Endpoint + 'createTrip', {
+          const response = await fetch(`${API_Endpoint}createTrip`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
