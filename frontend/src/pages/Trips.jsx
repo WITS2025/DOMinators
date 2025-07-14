@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from 'uuid'
  
  
 export default function Trips() {
- 
+  
+  const API_Endpoint =  'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
@@ -29,7 +30,7 @@ export default function Trips() {
   const fetchTrips = async () => {
   setLoading(true)
   try {
-    const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/getTripList', {
+    const response = await fetch(`${API_Endpoint}getTripList`, {
       method: 'GET',
     });
     if (!response.ok) throw new Error(`Failed to load trips: ${response.status}`)
@@ -62,7 +63,7 @@ export default function Trips() {
   // DELETE
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
+      const response = await fetch(`${API_Endpoint}deleteTrip?tripId=${id}`, {
         method: 'DELETE',
       });
  
@@ -82,8 +83,7 @@ export default function Trips() {
   // UPDATE with API call
   const updateTripAPI = async (tripId, attributeName, newValue) => {
     try {
-      const res = await fetch(
-        `https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=${encodeURIComponent(tripId)}`,
+      const res = await fetch(`${API_Endpoint}updateTrip?tripId=${encodeURIComponent(tripId)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -158,7 +158,7 @@ export default function Trips() {
       // new trip
       const saveTrip = async () => {
         try {
-          const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/createTrip', {
+          const response = await fetch(`${API_Endpoint}createTrip`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
