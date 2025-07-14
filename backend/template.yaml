@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda + API Gateway using SAM
+
+Resources:
+  TripTrekAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: TripTrekAPI
+
+  createTrip:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: createTrip
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: create/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /createTrip
+            Method: POST
+            ApiId: !Ref TripTrekAPI
+
+  getTripList:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getTripList
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: retrieve/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /getTripList
+            Method: GET
+            ApiId: !Ref TripTrekAPI
+  
+  updateTrip:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: updateTrip
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: update/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /updateTrip
+            Method: PATCH
+            ApiId: !Ref TripTrekAPI
+
+  deleteTrip:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: deleteTrip
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: delete/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /deleteTrip
+            Method: DELETE
+            ApiId: !Ref TripTrekAPI
+
+Outputs:
+  ApiUrl:
+    Description: "HTTP API endpoint base URL"
+    Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
