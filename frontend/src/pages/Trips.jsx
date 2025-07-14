@@ -7,13 +7,30 @@ import { v4 as uuidv4 } from 'uuid'
  
  
 export default function Trips() {
- 
+  
+  const API_Endpoint =  'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
   const [trips, setTrips] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [selectedTrip, setSelectedTrip] = useState(null)
+  const [editingTrip, setEditingTrip] = useState(null)
+
+  // helper to parse MM/DD/YYYY → Date
+  const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
+ 
+  // helper to convert 12h → 24h HH:mm
+  const convertTo24Hour = timeStr => {
+    const [time, mod] = timeStr.split(' ')
+    let [h, m] = time.split(':')
+    if (mod === 'PM' && h !== '12') h = String(+h + 12)
+    if (mod === 'AM' && h === '12') h = '00'
+    return `${h.padStart(2, '0')}:${m}`
+  }
  
   // RETRIEVE ALL
   const fetchTrips = async () => {
+  setLoading(true)
   try {
-    const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/getTripList', {
+    const response = await fetch(`${API_Endpoint}getTripList`, {
       method: 'GET',
     });
     if (!response.ok) throw new Error(`Failed to load trips: ${response.status}`)
@@ -36,18 +53,17 @@ export default function Trips() {
     setTrips(tripsWithSortedItinerary)
   } catch (err) {
     console.error('Error fetching trips:', err)
+  } finally {
+    setLoading(false)
   }
 }
  
   useEffect(() => { fetchTrips()}, [])
  
-  const [selectedTrip, setSelectedTrip] = useState(null)
-  const [editingTrip, setEditingTrip] = useState(null)
- 
   // DELETE
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=${id}`, {
+      const response = await fetch(`${API_Endpoint}deleteTrip?tripId=${id}`, {
         method: 'DELETE',
       });
  
@@ -64,23 +80,10 @@ export default function Trips() {
     }
   };
  
-  // helper to parse MM/DD/YYYY → Date
-  const parseMDY = str => parse(str, 'MM/dd/yyyy', new Date())
- 
-  // helper to convert 12h → 24h HH:mm
-  const convertTo24Hour = timeStr => {
-    const [time, mod] = timeStr.split(' ')
-    let [h, m] = time.split(':')
-    if (mod === 'PM' && h !== '12') h = String(+h + 12)
-    if (mod === 'AM' && h === '12') h = '00'
-    return `${h.padStart(2, '0')}:${m}`
-  }
- 
   // UPDATE with API call
   const updateTripAPI = async (tripId, attributeName, newValue) => {
     try {
-      const res = await fetch(
-        `https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=${encodeURIComponent(tripId)}`,
+      const res = await fetch(`${API_Endpoint}updateTrip?tripId=${encodeURIComponent(tripId)}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -119,7 +122,7 @@ export default function Trips() {
       const sortedActivities = [...dayActivities].sort((a, b) => {
         const a24 = convertTo24Hour(a.time)
         const b24 = convertTo24Hour(b.time)
-        return a24.localeCompare(b24)                                
+        return a24.localeCompare(b24)
       })
  
       return { date: dateStr, activities: sortedActivities }
@@ -155,7 +158,7 @@ export default function Trips() {
       // new trip
       const saveTrip = async () => {
         try {
-          const response = await fetch('https://0nkryc0lmb.execute-api.us-east-1.amazonaws.com/createTrip', {
+          const response = await fetch(`${API_Endpoint}createTrip`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -187,11 +190,20 @@ export default function Trips() {
  
   return (
     <div className="container bg-light-sand py-5 text-slate-gray">
+      
       <h2 className="text-center mb-4 text-forest-green">
-        {selectedTrip && !editingTrip ? 'Itinerary' : 'Destinations'}
-      </h2>                                   
+        {!selectedTrip && !editingTrip && 'Destinations'}
+        {selectedTrip && !editingTrip && 'Itinerary'}
+        {selectedTrip && editingTrip && editingTrip.destination}
+      </h2>
 
-      {!selectedTrip && !editingTrip && (
+      {loading && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ zIndex: 1050 }}>
+          <div className="spinner-border text-terra" role="status"></div>
+        </div>
+      )}
+
+      {!selectedTrip && !editingTrip && !loading &&(
         <>
           <button
             className="btn btn-terra mb-4 d-block mx-auto"
@@ -208,15 +220,12 @@ export default function Trips() {
           </button>
  
           <div className="mx-auto" style={{ maxWidth: '500px' }}>
-            {trips.length === 0 ? (
-              <p className="text-center">No trips yet. Start trekking!</p>
-            ) : (
-              <TripList
+            {<TripList
                 trips={trips}
                 onSelect={setSelectedTrip}
                 onDelete={handleDelete}
               />
-            )}
+            }
           </div>
         </>
       )}
