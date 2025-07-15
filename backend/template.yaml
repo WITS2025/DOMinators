@@ -23,7 +23,7 @@ Resources:
     Properties:
       FunctionName: createTrip
       Handler: index.handler
-      Runtime: nodejs18.x 
+      Runtime: nodejs22.x 
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
@@ -59,7 +59,7 @@ Resources:
     Properties:
       FunctionName: updateTrip
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
@@ -77,7 +77,7 @@ Resources:
     Properties:
       FunctionName: deleteTrip
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
