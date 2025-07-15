@@ -1,4 +1,9 @@
 {
   "name": "triptrek",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "jest-fetch-mock": "^3.0.3"
+  }
 }
