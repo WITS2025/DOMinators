@@ -6,7 +6,7 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Methods": "PATCH",
+  "Access-Control-Allow-Methods": "POST",
 };
 
 export const handler = async (event) => {
