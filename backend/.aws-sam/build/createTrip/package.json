@@ -1,0 +1,19 @@
+{
+  "name": "create",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.846.0",
+    "@aws-sdk/lib-dynamodb": "^3.846.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "jest-fetch-mock": "^3.0.3"
+  }
+}
