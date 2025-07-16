@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, beforeEach, test, expect, vi, it } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -41,7 +42,6 @@ describe('NavigationBar', () => {
       </BrowserRouter>
     );
 
-    // Adjust these based on your actual nav content
     expect(screen.getByRole('navigation')).toBeInTheDocument();
     expect(screen.getByText(/home/i)).toBeInTheDocument();
     expect(screen.getByText(/trips/i)).toBeInTheDocument();
