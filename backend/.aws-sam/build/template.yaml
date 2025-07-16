@@ -6,6 +6,16 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       Name: TripTrekAPI
+      CorsConfiguration:
+        AllowMethods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+        AllowOrigins:
+        - '*'
+        AllowHeaders:
+        - '*'
   createTrip:
     Type: AWS::Serverless::Function
     Properties:
