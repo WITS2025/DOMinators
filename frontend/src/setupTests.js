@@ -1,3 +1,4 @@
+
 import '@testing-library/jest-dom'
 
 // Mock fetch globally for all tests
@@ -9,3 +10,6 @@ global.fetch = vi.fn(() =>
     json: () => Promise.resolve([]),
   })
 )
+
+import '@testing-library/jest-dom';
+
