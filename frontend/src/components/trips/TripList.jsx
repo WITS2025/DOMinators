@@ -1,4 +1,3 @@
-// src/components/trips/TripList.jsx
 export default function TripList({ trips, onSelect, onDelete }) {
   return (
     <div className="list-group">

@@ -3,6 +3,11 @@ import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dyn
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST",
+};
 
 export const handler = async (event) => {
   console.log("Raw event:", event);
@@ -15,6 +20,7 @@ export const handler = async (event) => {
     console.error("Invalid JSON body:", event.body);
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: "Invalid JSON format." }),
     };
   }
@@ -36,6 +42,7 @@ export const handler = async (event) => {
   if (!tripID || !destination || !startDate || !endDate || !itinerary) {
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: "Missing required fields." }),
     };
   }
@@ -46,6 +53,7 @@ export const handler = async (event) => {
       if (!activity.name || !activity.time) {
         return {
           statusCode: 400,
+          headers: CORS_HEADERS,
           body: JSON.stringify({ message: "Each activity must have a name and a time." }),
         };
       }
@@ -65,6 +73,7 @@ export const handler = async (event) => {
     if (existingTrip.Item) {
       return {
         statusCode: 400,
+        headers: CORS_HEADERS,
         body: JSON.stringify({ message: "Trip already exists." }),
       };
     }
@@ -72,6 +81,7 @@ export const handler = async (event) => {
     console.error("Error checking for existing trip:", err);
     return {
       statusCode: 500,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: "Error checking for existing trip." }),
     };
   }
@@ -95,6 +105,7 @@ export const handler = async (event) => {
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return {
         statusCode: 400,
+        headers: CORS_HEADERS,
         body: JSON.stringify({ message: 'Invalid date format.' }),
       };
     }
@@ -104,6 +115,7 @@ export const handler = async (event) => {
     if (duration < 1) {
       return {
         statusCode: 400,
+        headers: CORS_HEADERS,
         body: JSON.stringify({ message: "Trip must be at least 1 day long." }),
       };
     }
@@ -113,6 +125,7 @@ export const handler = async (event) => {
 
     return {
       statusCode: 400,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: err.message }),
     };
   }
@@ -138,6 +151,7 @@ export const handler = async (event) => {
     await ddbDocClient.send(new PutCommand(params));
     return {
       statusCode: 200,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: "Itinerary created successfully.", itinerary }),
     };
   } catch (err) {
@@ -146,6 +160,7 @@ export const handler = async (event) => {
 
     return {
       statusCode: 500,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ message: "Error creating item in DynamoDB." }),
     };
   }
