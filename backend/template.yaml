@@ -3,6 +3,19 @@ Transform: AWS::Serverless-2016-10-31
 Description: Lambda + API Gateway using SAM
 
 Resources:
+
+  TripTrekTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TripTrek
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      BillingMode: PAYPERREQUEST
+      
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
