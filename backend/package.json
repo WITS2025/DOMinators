@@ -1,9 +1,7 @@
 {
-  "name": "triptrek",
-  "type": "module",
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "jest-fetch-mock": "^3.0.3"
+  "name": "triptrek-backend",
+  "private": true,
+  "scripts": {
+    "install-all": "npm --prefix create install && npm --prefix read install && npm --prefix update install && npm --prefix delete install"
   }
 }
