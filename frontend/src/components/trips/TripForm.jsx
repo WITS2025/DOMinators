@@ -1,5 +1,5 @@
 // src/components/trips/TripForm.jsx
-import { useState, useEffect } from 'react';
+/*import { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
@@ -210,4 +210,193 @@ export default function TripForm({ trip, onSave, onCancel }) {
       </div>
     </form>
   );
+}*/
+
+
+
+
+import { useState } from 'react'
+import { parse } from 'date-fns'
+
+export default function TripForm({ trip, onSave, onCancel }) {
+  const [localTrip, setLocalTrip] = useState(trip)
+
+  // Helper to parse MM/dd/yyyy → Date
+  const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date())
+
+  const handleChange = (field, value) => {
+    setLocalTrip({ ...localTrip, [field]: value })
+  }
+
+  const handleActivityDelete = (date, index) => {
+    const activity = localTrip.itinerary
+      .find(d => d.date === date)
+      ?.activities?.[index]
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the activity "${activity?.name}" at ${activity?.time} on ${date}?`
+    )
+    if (!confirmDelete) return
+
+    const updatedItinerary = localTrip.itinerary.map(day =>
+      day.date === date
+        ? {
+            ...day,
+            activities: day.activities.filter((_, i) => i !== index),
+          }
+        : day
+    )
+
+    setLocalTrip({ ...localTrip, itinerary: updatedItinerary })
+  }
+
+  function updateDayActivities(date, updatedActivities) {
+    const updatedItinerary = localTrip.itinerary.map(day =>
+      day.date === date
+        ? { ...day, activities: updatedActivities }
+        : day
+    )
+    setLocalTrip({ ...localTrip, itinerary: updatedItinerary })
+  }
+
+  const handleSubmit = () => {
+    const errors = []
+
+    if (!localTrip.destination.trim()) errors.push('Destination is required.')
+    if (!localTrip.startDate.trim()) errors.push('Start date is required.')
+    if (!localTrip.endDate.trim()) errors.push('End date is required.')
+
+    // parse dates properly
+    const start = parseMDY(localTrip.startDate)
+    const end = parseMDY(localTrip.endDate)
+
+    if (start.getTime() >= end.getTime()) {
+      errors.push('Please enter valid start and end dates (End date must be after start date).')
+    }
+
+    localTrip.itinerary.forEach(day => {
+      day.activities.forEach((activity, index) => {
+        if (!activity.name.trim()) {
+          errors.push(`Activity name is required on ${day.date} (activity ${index + 1})`)
+        }
+        if (!activity.time.trim()) {
+          errors.push(`Activity time is required on ${day.date} for "${activity.name || 'Unnamed activity'}"`)
+        }
+      })
+    })
+
+    if (errors.length > 0) {
+      alert('Please fix the following issues:\n\n' + errors.join('\n'))
+      return
+    }
+
+    onSave(localTrip)
+  }
+
+  return (
+    <div className="bg-white-custom p-4 rounded shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
+      <div className="mb-3">
+        <label className="form-label">Destination</label>
+        <input
+          className="form-control"
+          value={localTrip.destination}
+          onChange={e => handleChange('destination', e.target.value)}
+        />
+      </div>
+
+      <div className="row mb-3">
+        <div className="col">
+          <label className="form-label">Start Date</label>
+          <input
+            className="form-control"
+            type="date"
+            value={localTrip.startDate ? formatDateISO(localTrip.startDate) : ''}
+            onChange={e => handleChange('startDate', formatDateMDY(e.target.value))}
+          />
+        </div>
+        <div className="col">
+          <label className="form-label">End Date</label>
+          <input
+            className="form-control"
+            type="date"
+            value={localTrip.endDate ? formatDateISO(localTrip.endDate) : ''}
+            onChange={e => handleChange('endDate', formatDateMDY(e.target.value))}
+          />
+        </div>
+      </div>
+
+      {localTrip.itinerary.map(day => (
+        <div key={day.date} className="mb-4">
+          <h5 className="text-forest-green">{day.date}</h5>
+          {day.activities.map((activity, index) => (
+            <div key={index} className="d-flex align-items-center mb-2">
+              <input
+                type="text"
+                className="form-control me-2"
+                placeholder="Time"
+                value={activity.time}
+                onChange={e => {
+                  const updated = [...day.activities]
+                  updated[index].time = e.target.value
+                  updateDayActivities(day.date, updated)
+                }}
+              />
+              <input
+                type="text"
+                className="form-control me-2"
+                placeholder="Activity"
+                value={activity.name}
+                onChange={e => {
+                  const updated = [...day.activities]
+                  updated[index].name = e.target.value
+                  updateDayActivities(day.date, updated)
+                }}
+              />
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleActivityDelete(day.date, index)}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+
+          <button
+            className="btn btn-sm btn-outline-terra mt-2"
+            onClick={() => {
+              const updated = [...day.activities, { time: '', name: '' }]
+              updateDayActivities(day.date, updated)
+            }}
+          >
+            + Add Activity
+          </button>
+        </div>
+      ))}
+
+      <div className="d-flex justify-content-between mt-4">
+        <button className="btn btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="btn btn-terra" onClick={handleSubmit}>
+          Save Trip
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Helpers for date formatting to keep MM/dd/yyyy strings while using type="date" inputs
+
+function formatDateISO(mdyString) {
+  // input: "07/20/2025" → output: "2025-07-20"
+  if (!mdyString) return ''
+  const [month, day, year] = mdyString.split('/')
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+}
+
+function formatDateMDY(isoString) {
+  // input: "2025-07-20" → output: "07/20/2025"
+  if (!isoString) return ''
+  const [year, month, day] = isoString.split('-')
+  return `${month.padStart(2, '0')}/${day.padStart(2, '0')}/${year}`
 }
