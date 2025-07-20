@@ -1,213 +1,208 @@
-// src/components/trips/TripForm.jsx
-import { useState, useEffect } from 'react';
-import TimePicker from 'react-time-picker';
-import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
-import { format, eachDayOfInterval, parse } from 'date-fns';
+import { useState, useEffect } from 'react'
+import { format, isAfter, isBefore, parse } from 'date-fns'
 
 export default function TripForm({ trip, onSave, onCancel }) {
-  const [destination, setDestination] = useState(trip.destination || '');
-  const [startDate, setStartDate] = useState(trip.startDate || '');
-  const [endDate, setEndDate] = useState(trip.endDate || '');
-  const [itinerary, setItinerary] = useState(trip.itinerary || []);
-  const [newActivityTime, setNewActivityTime] = useState({});
-  const [newActivityName, setNewActivityName] = useState({});
-  const [error, setError] = useState('');
+  const [localTrip, setLocalTrip] = useState(trip)
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
-  const toInputDate = (display) => {
-    if (!display) return '';
-    const [m, d, y] = display.split('/');
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  };
-
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
-  const fromInputDate = (iso) => {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    return `${m}/${d}/${y}`;
-  };
-
-  const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date());
+  const parseDate = str => parse(str, 'MM/dd/yyyy', new Date())
 
   useEffect(() => {
-    if (startDate && endDate) {
-      const start = parseMDY(startDate);
-      const end = parseMDY(endDate);
-
-      if (end >= start) {
-        const days = eachDayOfInterval({ start, end });
-        setItinerary(prev => {
-          const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
-          return days.map(date => {
-            const dateStr = format(date, 'MM/dd/yyyy');
-            return prevMap[dateStr] || { date: dateStr, activities: [] };
-          });
-        });
+    if (localTrip.startDate && localTrip.endDate) {
+      const start = parseDate(localTrip.startDate)
+      const end = parseDate(localTrip.endDate)
+      if (isAfter(start, end)) {
+        alert('End date must be after start date.')
       } else {
-        setItinerary([]);
+        const itinerary = []
+        let current = start
+        while (!isAfter(current, end)) {
+          const dateStr = format(current, 'MM/dd/yyyy')
+          const existingDay = localTrip.itinerary.find(d => d.date === dateStr)
+          itinerary.push(existingDay || { date: dateStr, activities: [] })
+          current.setDate(current.getDate() + 1)
+        }
+        setLocalTrip({ ...localTrip, itinerary })
       }
-    } else {
-      setItinerary([]);
     }
-  }, [startDate, endDate]);
+  }, [localTrip.startDate, localTrip.endDate])
 
-  const handleAddActivity = (date) => {
-    const time = newActivityTime[date];
-    const name = newActivityName[date];
-    if (!time || !name) return;
+  const handleChange = (field, value) => {
+    setLocalTrip({ ...localTrip, [field]: value })
+  }
 
-    const formattedTime = formatTime12Hour(time);
+  const updateDayActivities = (date, updatedActivities) => {
+    const updatedItinerary = localTrip.itinerary.map(day =>
+      day.date === date ? { ...day, activities: updatedActivities } : day
+    )
+    setLocalTrip({ ...localTrip, itinerary: updatedItinerary })
+  }
 
-    setItinerary(prev =>
-      prev.map(day => {
-        if (day.date !== date) return day;
+  const handleAddActivity = date => {
+    const updatedItinerary = localTrip.itinerary.map(day =>
+      day.date === date
+        ? {
+            ...day,
+            activities: [...day.activities, { time: '', name: '' }]
+          }
+        : day
+    )
+    setLocalTrip({ ...localTrip, itinerary: updatedItinerary })
+  }
 
-        const updatedActivities = [...day.activities, { time: formattedTime, name }].sort((a, b) => {
-          const parseTime = (str) => {
-            const [t, mod] = str.split(' ');
-            let [h, m] = t.split(':');
-            if (mod === 'PM' && h !== '12') h = String(+h + 12);
-            if (mod === 'AM' && h === '12') h = '00';
-            return `${h.padStart(2, '0')}:${m}`;
-          };
-          return parseTime(a.time).localeCompare(parseTime(b.time));
-        });
+  const handleActivityDelete = (date, index) => {
+    const activity = localTrip.itinerary.find(d => d.date === date)?.activities?.[index]
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the activity "${activity?.name}" at ${activity?.time} on ${date}?`
+    )
+    if (!confirmDelete) return
 
-        return { ...day, activities: updatedActivities };
+    const updatedItinerary = localTrip.itinerary.map(day =>
+      day.date === date
+        ? {
+            ...day,
+            activities: day.activities.filter((_, i) => i !== index),
+          }
+        : day
+    )
+
+    setLocalTrip({ ...localTrip, itinerary: updatedItinerary })
+  }
+
+  const handleSubmit = () => {
+    const errors = []
+    if (!localTrip.destination.trim()) errors.push('Destination is required.')
+    if (!localTrip.startDate.trim()) errors.push('Start date is required.')
+    if (!localTrip.endDate.trim()) errors.push('End date is required.')
+
+    const start = parseDate(localTrip.startDate)
+    const end = parseDate(localTrip.endDate)
+    if (isBefore(end, start)) {
+      errors.push('End date must be after start date.')
+    }
+
+    localTrip.itinerary.forEach(day => {
+      day.activities.forEach((activity, index) => {
+        if (!activity.name.trim()) {
+          errors.push(`Activity name is required on ${day.date} (activity ${index + 1})`)
+        }
+        if (!activity.time.trim()) {
+          errors.push(`Activity time is required on ${day.date} for "${activity.name || 'Unnamed activity'}"`)
+        }
       })
-    );
+    })
 
-    setNewActivityTime({ ...newActivityTime, [date]: '' });
-    setNewActivityName({ ...newActivityName, [date]: '' });
-  };
-
-  const formatTime12Hour = (timeStr) => {
-    const [hour, minute] = timeStr.split(':');
-    const h = parseInt(hour, 10);
-    const suffix = h >= 12 ? 'PM' : 'AM';
-    const displayHour = h % 12 || 12;
-    return `${displayHour}:${minute} ${suffix}`;
-  };
-
-  const handleRemoveActivity = (date, index) => {
-    setItinerary(prev =>
-      prev.map(day =>
-        day.date === date
-          ? { ...day, activities: day.activities.filter((_, i) => i !== index) }
-          : day
-      )
-    );
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!destination || !startDate || !endDate) {
-      setError('Please fill in all fields.');
-      return;
+    if (errors.length > 0) {
+      alert('Please fix the following issues:\n\n' + errors.join('\n'))
+      return
     }
-    const itineraryToSave = itinerary.map(day => ({
-      date: day.date,
-      activities: [...day.activities]
-    }));
-    onSave({
-      ...trip,
-      destination,
-      startDate,
-      endDate,
-      itinerary: itineraryToSave
-    });
-  };
+
+    if (localTrip.itinerary.every(day => day.activities.length === 0)) {
+      const proceed = window.confirm('No activities were added. Are you sure you want to save this trip?')
+      if (!proceed) return
+    }
+
+    onSave(localTrip)
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4">
-      <h4 className="text-forest-green mb-3">Add / Edit Trip</h4>
-      {error && <div className="alert alert-danger">{error}</div>}
-
+    <div className="bg-white-custom p-4 rounded shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
       <div className="mb-3">
         <label className="form-label">Destination</label>
         <input
-          type="text"
           className="form-control"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
+          value={localTrip.destination}
+          onChange={e => handleChange('destination', e.target.value)}
         />
       </div>
 
       <div className="row mb-3">
-        <div className="col-md-6">
+        <div className="col">
           <label className="form-label">Start Date</label>
           <input
             type="date"
             className="form-control"
-            value={startDate ? toInputDate(startDate) : ''}
-            onChange={(e) => setStartDate(fromInputDate(e.target.value))}
+            value={convertToInputDate(localTrip.startDate)}
+            onChange={e =>
+              handleChange('startDate', convertToDisplayDate(e.target.value))
+            }
           />
         </div>
-        <div className="col-md-6">
+        <div className="col">
           <label className="form-label">End Date</label>
           <input
             type="date"
             className="form-control"
-            value={endDate ? toInputDate(endDate) : ''}
-            min={startDate ? toInputDate(startDate) : ''}
-            onChange={(e) => setEndDate(fromInputDate(e.target.value))}
+            value={convertToInputDate(localTrip.endDate)}
+            onChange={e =>
+              handleChange('endDate', convertToDisplayDate(e.target.value))
+            }
           />
         </div>
       </div>
 
-      {itinerary.length > 0 && (
-        <div className="mb-3">
-          <label className="form-label">Itinerary</label>
-          {itinerary.map((day, i) => (
-            <div key={i} className="border rounded p-3 mb-3">
-              <strong>{day.date}</strong>
-              <ul className="list-unstyled">
-                {day.activities.map((activity, j) => (
-                  <li key={j}>
-                    {activity.time} — {activity.name}
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-danger ms-2"
-                      onClick={() => handleRemoveActivity(day.date, j)}
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <div className="d-flex flex-wrap gap-2 mt-2">
-                <TimePicker
-                  disableClock={true}
-                  clearIcon={null}
-                  format="h:mm a"
-                  value={newActivityTime[day.date] || ''}
-                  onChange={(val) => setNewActivityTime({ ...newActivityTime, [day.date]: val })}
-                />
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Activity Description"
-                  value={newActivityName[day.date] || ''}
-                  onChange={(e) => setNewActivityName({ ...newActivityName, [day.date]: e.target.value })}
-                />
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => handleAddActivity(day.date)}
-                >
-                  + Add Activity
-                </button>
-              </div>
+      {localTrip.itinerary.map(day => (
+        <div key={day.date} className="mb-4">
+          <h5 className="text-forest-green d-flex justify-content-between align-items-center">
+            {day.date}
+            <button className="btn btn-sm btn-outline-primary" onClick={() => handleAddActivity(day.date)}>
+              + Add Activity
+            </button>
+          </h5>
+          {day.activities.map((activity, index) => (
+            <div key={index} className="d-flex align-items-center mb-2">
+              <input
+                type="text"
+                className="form-control me-2"
+                placeholder="Time"
+                value={activity.time}
+                onChange={e => {
+                  const updated = [...day.activities]
+                  updated[index].time = e.target.value
+                  updateDayActivities(day.date, updated)
+                }}
+              />
+              <input
+                type="text"
+                className="form-control me-2"
+                placeholder="Activity"
+                value={activity.name}
+                onChange={e => {
+                  const updated = [...day.activities]
+                  updated[index].name = e.target.value
+                  updateDayActivities(day.date, updated)
+                }}
+              />
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleActivityDelete(day.date, index)}
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
-      )}
+      ))}
 
-      <div className="mt-3 d-flex justify-content-center">
-        <button type="submit" className="btn btn-terra me-2">Save</button>
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+      <div className="d-flex justify-content-between mt-4">
+        <button className="btn btn-secondary" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="btn btn-terra" onClick={handleSubmit}>
+          Save Trip
+        </button>
       </div>
-    </form>
-  );
+    </div>
+  )
+}
+
+function convertToInputDate(mdy) {
+  if (!mdy) return ''
+  const [month, day, year] = mdy.split('/')
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+}
+
+function convertToDisplayDate(iso) {
+  if (!iso) return ''
+  const [year, month, day] = iso.split('-')
+  return `${month}/${day}/${year}`
 }
