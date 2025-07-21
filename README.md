@@ -1,4 +1,4 @@
-![alt text](frontend/src/assets/TripTrekLogo.png) 
+![Trip Trek -- Your Itinerary Planner](frontend/src/assets/TripTrekLogo.png) 
 
 ### Welcome to **TripTrek**, the ultimate tool for organizing your day, trip, or event with ease and clarity. Whether you're planning a vacation, a conference, or just your weekend, **TripTrek** helps you stay on track and in control.
 
@@ -24,7 +24,7 @@ Sign in to manage your private trips, or contribute to a shared public itinerary
 Get real-time Google Maps directions for each day’s plans, just one tap away.
 
 ### 📋 **Clean & Intuitive Interface**
-Designed for simplicity and speed-because planning should be fun, not frustrating.
+Designed for simplicity and speed -- because planning should be fun, not frustrating.
 
 ## 👩‍💻 **Developers**
 - Miriam Iny
