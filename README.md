@@ -33,7 +33,7 @@ Designed for simplicity and speed -- because planning should be fun, not frustra
 - Chana Leah Nissel
 
 ## 🛠️ **Development Stack**
-This project uses React with Vite for a fast and modern frontend development experience, and Node.js for backend logic. It leverages AWS Lambda (via AWS SAM) and Amazon DynamoDB to support a fully serverless architecture.
+This project uses React with Vite for a fast and modern frontend development experience, and Node.js for backend logic. It leverages AWS Lambda (via AWS SAM), Amazon DynamoDB and API Gateway to support a fully serverless architecture.
 
 ## 📥 **Installation**
 
@@ -61,7 +61,11 @@ This project uses React with Vite for a fast and modern frontend development exp
    sam build
    sam deploy
 
-4. Update frontend/pages/Trips.jsx line 11
+4. Connect frontend to backend
+   
+   Update frontend/pages/Trips.jsx line 11 
+   
+   Set the API base URL to the deployed API Gateway URL from the SAM deploy output.
    ```bash
    const API_Endpoint =  'https://your-api-endpoint.amazonaws.com/'
 
