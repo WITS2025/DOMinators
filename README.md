@@ -39,20 +39,21 @@ This project uses React with Vite for a fast and modern frontend development exp
 
 #### To run the app locally, follow these steps:
 
-1. Clone the repository
+### 1. Clone the repository
    ```bash
    git clone https://github.com/WITS2025/TripTrek.git
    cd TripTrek
+   ```
 
-2. Setup frontend
+### 2. Setup frontend
    ```bash
    cd frontend
    npm install
    npm run dev
-
+   ```
 #### Steps 3 and 4 are optional
 
-3. Setup backend
+### 3. Setup backend
    
    Ensure you have AWS CLI and AWS SAM CLI installed.
    ```bash
@@ -60,14 +61,14 @@ This project uses React with Vite for a fast and modern frontend development exp
    npm run install-all
    sam build
    sam deploy
-
-4. Connect frontend to backend
+   ```
+### 4. Connect frontend to backend
    
    Update frontend/pages/Trips.jsx line 11 
    
    Set the API base URL to the deployed API Gateway URL from the SAM deploy output.
    ```bash
    const API_Endpoint =  'https://your-api-endpoint.amazonaws.com/'
-
+   ```
 ## 📌 **Why TripTrek?**
 ### Because life is better when it's organized. Whether you're a meticulous planner or a spontaneous adventurer, **TripTrek** gives you the flexibility to build and adjust your itinerary on the fly.
