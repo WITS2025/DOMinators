@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import Trips from '../../pages/Trips'
+import Trips from './Trips'
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
