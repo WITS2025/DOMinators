@@ -120,7 +120,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4">
+    <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4 d-flex flex-column">
       <h4 className="text-forest-green mb-3">Add / Edit Trip</h4>
       {error && <div className="alert alert-danger">{error}</div>}
 
