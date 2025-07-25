@@ -1,16 +1,14 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - nvm use 20
 applications:
   - appRoot: frontend
     frontend:
       phases:
         preBuild:
           commands:
-            - npm ci
+            - nvm use 20
+            - node --version
+            - npm --version
+            - npm ci --engine-strict=false
         build:
           commands:
             - npm run build
