@@ -1,4 +1,10 @@
+// src/components/trips/TripList.jsx
+
+import { useNavigate } from 'react-router-dom'
+
 export default function TripList({ trips, onSelect, onDelete }) {
+  const navigate = useNavigate()
+
   return (
     <div className="list-group">
       {trips.length === 0 && <div className="text-center">No trips planned yet. Start trekking!</div>}
@@ -9,14 +15,11 @@ export default function TripList({ trips, onSelect, onDelete }) {
         >
           <div
             className="flex-grow-1 text-center"
-            onClick={() => onSelect(trip)}
+            onClick={() => navigate(`/trips/${trip.id}`)}
             style={{ cursor: "pointer" }}
           >
-            <strong>{trip.destination}</strong>
-            <br />
-            <small>
-              {trip.startDate} to {trip.endDate}
-            </small>
+            <strong>{trip.destination}</strong> <br />
+            <small>{trip.startDate} to {trip.endDate}</small>
           </div>
           <button
             className="btn btn-sm btn-outline-danger"
