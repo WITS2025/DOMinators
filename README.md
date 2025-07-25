@@ -64,7 +64,7 @@ This project uses React with Vite for a fast and modern frontend development exp
    ```
 ### 4. Connect frontend to backend
    
-   Update frontend/pages/Trips.jsx line 11 
+   Update frontend/src/pages/Trips.jsx line 11 
    
    Set the API base URL to the deployed API Gateway URL from the SAM deploy output.
    ```bash
