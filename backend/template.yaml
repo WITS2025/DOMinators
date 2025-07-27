@@ -7,7 +7,6 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -45,7 +44,7 @@ Resources:
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -63,7 +62,7 @@ Resources:
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -81,7 +80,7 @@ Resources:
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -99,7 +98,7 @@ Resources:
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -133,3 +132,8 @@ Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+
+  TableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref TripTrekTable
+
