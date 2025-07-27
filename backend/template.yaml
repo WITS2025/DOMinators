@@ -18,7 +18,7 @@ Resources:
   TripTrekImageBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: triptrek-images-bucket  # ⚠️ must be globally unique
+      BucketName: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Unique bucket name
 
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
@@ -76,7 +76,7 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
@@ -125,14 +125,14 @@ Resources:
       FunctionName: getSignedUrl
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: upload/       # Folder name is 'upload' for the signed URL Lambda
+      CodeUri: upload/
       Environment:
         Variables:
-          BUCKET_NAME: triptrek-images-bucket
+          BUCKET_NAME: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Use dynamic name
           LOCATIONS_TABLE: !Ref TripTrekTable
       Policies:
         - S3CrudPolicy:
-            BucketName: triptrek-images-bucket
+            BucketName: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Match S3 bucket
         - DynamoDBCrudPolicy:
             TableName: !Ref TripTrekTable
       Events:
