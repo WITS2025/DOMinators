@@ -16,6 +16,11 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "triptrek-uploads-${AWS::AccountId}"
+
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -101,6 +106,27 @@ Resources:
           Properties:
             Path: /deleteTrip
             Method: DELETE
+            ApiId: !Ref TripTrekAPI
+
+  generateSignedUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: generateSignedUrl
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: generateSignedUrl/
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref UploadBucket
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref UploadBucket
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /generateSignedUrl
+            Method: POST
             ApiId: !Ref TripTrekAPI
 
 Outputs:
