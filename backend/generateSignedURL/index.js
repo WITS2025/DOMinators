@@ -1,18 +1,24 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { v4 as uuidv4 } from "uuid";
 
-const s3 = new S3Client({ region: "us-east-1" }); // use your actual region
-const BUCKET_NAME = "your-bucket-name"; // set your S3 bucket name
+const BUCKET_NAME = process.env.BUCKET_NAME;
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
+};
 
 export const handler = async (event) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-  };
-
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers };
+  if (event.requestContext?.http?.method === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: CORS_HEADERS,
+      body: "",
+    };
   }
 
   let body;
@@ -21,43 +27,46 @@ export const handler = async (event) => {
   } catch {
     return {
       statusCode: 400,
-      headers,
-      body: JSON.stringify({ message: "Invalid JSON" }),
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Invalid JSON body" }),
     };
   }
 
-  const { fileName, fileType } = body;
+  const { fileType } = body;
 
-  if (!fileName || !fileType) {
+  if (!fileType) {
     return {
       statusCode: 400,
-      headers,
-      body: JSON.stringify({ message: "Missing fileName or fileType" }),
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Missing fileType in request body" }),
     };
   }
 
-  const key = `uploads/${Date.now()}_${fileName}`;
+  const extension = fileType.split("/")[1];
+  const fileName = `uploads/${uuidv4()}.${extension}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
-    Key: key,
+    Key: fileName,
     ContentType: fileType,
   });
 
   try {
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // valid for 5 mins
-    const imageUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 }); // 1 min
+
+    const imageUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
     return {
       statusCode: 200,
-      headers,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ uploadUrl, imageUrl }),
     };
   } catch (err) {
     console.error("Error generating signed URL", err);
     return {
       statusCode: 500,
-      headers,
-      body: JSON.stringify({ message: "Failed to generate signed URL" }),
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Error generating signed URL" }),
     };
   }
 };

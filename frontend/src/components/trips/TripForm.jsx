@@ -12,21 +12,15 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityTime, setNewActivityTime] = useState({});
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
-  
-  // New state for images
-  // Store selected File objects for upload
   const [selectedFiles, setSelectedFiles] = useState([]);
-  // Store image URLs for preview (either from trip or uploaded)
   const [imagePreviews, setImagePreviews] = useState(trip.photoUrls || []);
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -105,20 +99,16 @@ export default function TripForm({ trip, onSave, onCancel }) {
     );
   };
 
-  // Handle file input change
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setSelectedFiles(prev => [...prev, ...files]);
 
-    // Create preview URLs for new files
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
   };
 
-  // Remove image by index (both preview and file)
   const handleRemoveImage = (index) => {
     setImagePreviews(prev => {
-      // Revoke object URL if it's a blob url
       const url = prev[index];
       if (url.startsWith('blob:')) {
         URL.revokeObjectURL(url);
@@ -128,15 +118,13 @@ export default function TripForm({ trip, onSave, onCancel }) {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Fake image upload function (replace with your real upload API)
   const uploadImages = async (files) => {
-    // Simulate upload delay
+    // Replace this mock with a real S3 signed URL upload process
     return new Promise((resolve) => {
       setTimeout(() => {
-        // For demo, just return fake URLs based on file names
         const urls = files.map(f => `https://fakeimgserver.com/uploads/${encodeURIComponent(f.name)}`);
         resolve(urls);
-      }, 1500);
+      }, 1000);
     });
   };
 
@@ -150,13 +138,11 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
 
     try {
-      // Upload images and get URLs
       let uploadedUrls = [];
       if (selectedFiles.length > 0) {
         uploadedUrls = await uploadImages(selectedFiles);
       }
 
-      // Combine existing URLs from trip.photoUrls (if any) + newly uploaded URLs
       const allPhotoUrls = [
         ...(trip.photoUrls || []),
         ...uploadedUrls
@@ -218,7 +204,6 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       </div>
 
-      {/* Image upload */}
       <div className="mb-3">
         <label className="form-label">Trip Images</label>
         <input
