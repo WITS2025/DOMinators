@@ -1,5 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import Trips from './Trips'
+import { TripProvider } from '../context/TripContext'
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
@@ -11,18 +13,29 @@ global.fetch = vi.fn(() =>
   })
 )
 
+// Helper function to render component with all required providers
+const renderWithProviders = (component) => {
+  return render(
+    <MemoryRouter>
+      <TripProvider>
+        {component}
+      </TripProvider>
+    </MemoryRouter>
+  );
+};
+
 describe('Trips Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders Destinations header', async () => {
-    render(<Trips />)
+    renderWithProviders(<Trips />)
     expect(await screen.findByText(/Destinations/i)).toBeInTheDocument()
   })
 
   it('shows New Trip button', async () => {
-    render(<Trips />)
+    renderWithProviders(<Trips />)
     expect(await screen.findByRole('button', { name: /\+ New Trip/i })).toBeInTheDocument()
   })
 
@@ -39,7 +52,7 @@ describe('Trips Page', () => {
         )
       )
     )
-    render(<Trips />)
+    renderWithProviders(<Trips />)
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
 
@@ -61,11 +74,9 @@ describe('Trips Page', () => {
       })
     )
 
-    render(<Trips />)
+    renderWithProviders(<Trips />)
 
     // Wait for the trip destination to appear on screen
     expect(await screen.findByText(/Paris/i)).toBeInTheDocument()
   })
 })
-
-
