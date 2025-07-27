@@ -1,60 +1,40 @@
-const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
-
-const s3 = new AWS.S3();
-const db = new AWS.DynamoDB.DocumentClient();
-
-const bucketName = process.env.BUCKET_NAME;
-const tableName = process.env.LOCATIONS_TABLE;
-
 exports.handler = async (event) => {
-  console.log("Incoming event:", event);
-
   try {
     const body = JSON.parse(event.body);
-    const { fileType, locationId } = body;
+    const { fileType } = body;  // no locationId now
 
-    if (!fileType || !locationId) {
+    if (!fileType) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Missing fileType or locationId" }),
+        body: JSON.stringify({ error: "Missing fileType" }),
       };
     }
 
     const extension = fileType.split('/')[1] || 'jpg';
-    const imageKey = `locations/${locationId}/${uuidv4()}.${extension}`;
+    const key = `uploads/${uuidv4()}.${extension}`;  // simpler path
 
-    const uploadParams = {
+    const params = {
       Bucket: bucketName,
-      Key: imageKey,
+      Key: key,
       ContentType: fileType,
-      Expires: 300, // 5 minutes
+      Expires: 300,
     };
 
-    const uploadUrl = await s3.getSignedUrlPromise('putObject', uploadParams);
-    const imageUrl = `https://${bucketName}.s3.amazonaws.com/${imageKey}`;
+    const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
+    const imageUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
 
-    // Update DynamoDB with the image URL
-    await db.update({
-      TableName: tableName,
-      Key: { pk: locationId },
-      UpdateExpression: 'SET imageUrl = :imageUrl',
-      ExpressionAttributeValues: {
-        ':imageUrl': imageUrl
-      }
-    }).promise();
+    // Optional: you can skip DB update since no locationId
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         uploadUrl,
-        imageUrl
-      })
+        imageUrl,
+      }),
     };
-
   } catch (err) {
-    console.error("Error generating signed URL or updating DB:", err);
+    console.error(err);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Server error' }),
