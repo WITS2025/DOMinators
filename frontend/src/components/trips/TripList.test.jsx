@@ -1,7 +1,31 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, test } from 'vitest';
 import TripList from './TripList';
+
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// Helper function to render component with Router
+const renderWithRouter = (component) => {
+  return render(
+    <MemoryRouter>
+      {component}
+    </MemoryRouter>
+  );
+};
+
+beforeEach(() => {
+  mockNavigate.mockClear();
+});
 
 describe('TripList', () => {
   const mockTrips = [
@@ -23,59 +47,48 @@ describe('TripList', () => {
     const onSelect = vi.fn();
     const onDelete = vi.fn();
 
-    render(<TripList trips={mockTrips} onSelect={onSelect} onDelete={onDelete} />);
+    renderWithRouter(<TripList trips={mockTrips} onSelect={onSelect} onDelete={onDelete} />);
 
     // Check that both destinations are rendered
     expect(screen.getByText('Paris')).toBeInTheDocument();
     expect(screen.getByText('Tokyo')).toBeInTheDocument();
 
-    // Simulate clicking on the first trip
+    // Test navigation when clicking on trip
     fireEvent.click(screen.getByText('Paris'));
-    expect(onSelect).toHaveBeenCalledWith(mockTrips[0]);
+    expect(mockNavigate).toHaveBeenCalledWith('/trips/1');
 
-    // Simulate clicking the delete button for the second trip
+    // Test delete functionality
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[1]);
     expect(onDelete).toHaveBeenCalledWith(mockTrips[1].id);
   });
-});
-
-
-
-describe('TripList', () => {
-  const mockTrips = [
-    {
-      id: 1,
-      destination: 'London',
-      startDate: '2025-07-01',
-      endDate: '2025-07-10',
-    },
-    {
-      id: 2,
-      destination: 'Berlin',
-      startDate: '2025-08-15',
-      endDate: '2025-08-22',
-    },
-  ];
 
   it('renders trips and handles select and delete actions', () => {
     const onSelect = vi.fn();
     const onDelete = vi.fn();
 
-    render(<TripList trips={mockTrips} onSelect={onSelect} onDelete={onDelete} />);
+    renderWithRouter(<TripList trips={mockTrips} onSelect={onSelect} onDelete={onDelete} />);
 
     // Check that both destinations are rendered
-    expect(screen.getByText('London')).toBeInTheDocument();
-    expect(screen.getByText('Berlin')).toBeInTheDocument();
+    expect(screen.getByText('Paris')).toBeInTheDocument();
+    expect(screen.getByText('Tokyo')).toBeInTheDocument();
 
-    // Click on a trip
-    fireEvent.click(screen.getByText('London'));
-    expect(onSelect).toHaveBeenCalledWith(mockTrips[0]);
+    // Test navigation when clicking on Tokyo
+    fireEvent.click(screen.getByText('Tokyo'));
+    expect(mockNavigate).toHaveBeenCalledWith('/trips/2');
 
-    // Click delete button
+    // Test delete functionality
     const deleteButtons = screen.getAllByText('Delete');
-    fireEvent.click(deleteButtons[1]);
-    expect(onDelete).toHaveBeenCalledWith(mockTrips[1].id);
+    fireEvent.click(deleteButtons[0]);
+    expect(onDelete).toHaveBeenCalledWith(mockTrips[0].id);
+  });
+
+  it('shows empty state when no trips', () => {
+    const onSelect = vi.fn();
+    const onDelete = vi.fn();
+
+    renderWithRouter(<TripList trips={[]} onSelect={onSelect} onDelete={onDelete} />);
+
+    expect(screen.getByText('No trips planned yet. Start trekking!')).toBeInTheDocument();
   });
 });
-
