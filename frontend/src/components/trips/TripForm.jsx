@@ -1,382 +1,321 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
+import { format, eachDayOfInterval, parse } from 'date-fns';
 
-function formatDate(date) {
-  // Format date as MM/DD/YYYY
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  return `${mm}/${dd}/${yyyy}`;
-}
+export default function TripForm({ trip, onSave, onCancel }) {
+  const [destination, setDestination] = useState(trip.destination || '');
+  const [startDate, setStartDate] = useState(trip.startDate || '');
+  const [endDate, setEndDate] = useState(trip.endDate || '');
+  const [itinerary, setItinerary] = useState(trip.itinerary || []);
+  const [newActivityTime, setNewActivityTime] = useState({});
+  const [newActivityName, setNewActivityName] = useState({});
+  const [error, setError] = useState('');
+  
+  // New state for images
+  // Store selected File objects for upload
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Store image URLs for preview (either from trip or uploaded)
+  const [imagePreviews, setImagePreviews] = useState(trip.photoUrls || []);
 
-function getDateRange(start, end) {
-  // Returns array of dates (Date objects) between start and end inclusive
-  const dates = [];
-  let current = new Date(start);
-  const last = new Date(end);
-  while (current <= last) {
-    dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
-}
+  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
+  const toInputDate = (display) => {
+    if (!display) return '';
+    const [m, d, y] = display.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  };
 
-export default function TripForm({ initialData = null, onSave }) {
-  // initialData is optional for editing existing trips
+  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
+  const fromInputDate = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${m}/${d}/${y}`;
+  };
 
-  const [destination, setDestination] = useState(initialData?.destination || "");
-  const [startDate, setStartDate] = useState(
-    initialData?.startDate
-      ? initialData.startDate.split("/").reverse().join("-") // from MM/DD/YYYY to YYYY-MM-DD for input
-      : ""
-  );
-  const [endDate, setEndDate] = useState(
-    initialData?.endDate
-      ? initialData.endDate.split("/").reverse().join("-")
-      : ""
-  );
-  const [itinerary, setItinerary] = useState(
-    initialData?.itinerary || []
-  );
-  const [error, setError] = useState("");
+  const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date());
 
-  // When startDate or endDate changes, regenerate itinerary dates if empty or mismatch
   useEffect(() => {
-    if (!startDate || !endDate) return;
+    if (startDate && endDate) {
+      const start = parseMDY(startDate);
+      const end = parseMDY(endDate);
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (start > end) {
-      setError("Start Date cannot be after End Date");
-      return;
+      if (end >= start) {
+        const days = eachDayOfInterval({ start, end });
+        setItinerary(prev => {
+          const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
+          return days.map(date => {
+            const dateStr = format(date, 'MM/dd/yyyy');
+            return prevMap[dateStr] || { date: dateStr, activities: [] };
+          });
+        });
+      } else {
+        setItinerary([]);
+      }
     } else {
-      setError("");
+      setItinerary([]);
     }
-
-    const dates = getDateRange(start, end).map((d) => formatDate(d));
-
-    // Build itinerary days with default empty activities and photos if missing
-    setItinerary((oldItinerary) => {
-      // Map old itinerary for quick access
-      const oldMap = {};
-      oldItinerary.forEach((day) => (oldMap[day.date] = day));
-
-      return dates.map((date) => oldMap[date] || {
-        date,
-        activities: [],
-        photoUrls: [],
-        photosToUpload: [] // for new uploads (files, not URLs)
-      });
-    });
   }, [startDate, endDate]);
 
-  // Handle activity changes
-  const updateActivity = (date, index, field, value) => {
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((day) => {
+  const handleAddActivity = (date) => {
+    const time = newActivityTime[date];
+    const name = newActivityName[date];
+    if (!time || !name) return;
+
+    const formattedTime = formatTime12Hour(time);
+
+    setItinerary(prev =>
+      prev.map(day => {
         if (day.date !== date) return day;
-        const activities = [...day.activities];
-        activities[index] = { ...activities[index], [field]: value };
-        return { ...day, activities };
-      })
-    );
-  };
 
-  // Add activity to a date
-  const addActivity = (date) => {
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((day) => {
-        if (day.date !== date) return day;
-        return {
-          ...day,
-          activities: [...day.activities, { time: "", name: "" }],
-        };
-      })
-    );
-  };
-
-  // Remove activity from a date
-  const removeActivity = (date, index) => {
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((day) => {
-        if (day.date !== date) return day;
-        const activities = [...day.activities];
-        activities.splice(index, 1);
-        return { ...day, activities };
-      })
-    );
-  };
-
-  // Handle photo file selection per day
-  const onPhotoChange = (date, files) => {
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((day) => {
-        if (day.date !== date) return day;
-        return {
-          ...day,
-          photosToUpload: Array.from(files),
-        };
-      })
-    );
-  };
-
-  // Upload photos for a specific date
-  const uploadPhotosForDate = async (date) => {
-    const day = itinerary.find((d) => d.date === date);
-    if (!day || !day.photosToUpload || day.photosToUpload.length === 0) return;
-
-    // Upload each photo, get S3 url from backend (adjust your API here)
-    const uploadedUrls = [];
-
-    for (const file of day.photosToUpload) {
-      try {
-        // Get signed URL from backend
-        const res = await fetch(
-          "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com/getSignedUrl",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileType: file.type }),
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Failed to get signed URL");
-        }
-
-        const { uploadUrl, imageUrl } = await res.json();
-
-        // Upload file to S3
-        const uploadRes = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": file.type },
-          body: file,
+        const updatedActivities = [...day.activities, { time: formattedTime, name }].sort((a, b) => {
+          const parseTime = (str) => {
+            const [t, mod] = str.split(' ');
+            let [h, m] = t.split(':');
+            if (mod === 'PM' && h !== '12') h = String(+h + 12);
+            if (mod === 'AM' && h === '12') h = '00';
+            return `${h.padStart(2, '0')}:${m}`;
+          };
+          return parseTime(a.time).localeCompare(parseTime(b.time));
         });
 
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload file to S3");
-        }
+        return { ...day, activities: updatedActivities };
+      })
+    );
 
-        uploadedUrls.push(imageUrl);
-      } catch (err) {
-        alert(`Error uploading file ${file.name}: ${err.message}`);
+    setNewActivityTime({ ...newActivityTime, [date]: '' });
+    setNewActivityName({ ...newActivityName, [date]: '' });
+  };
+
+  const formatTime12Hour = (timeStr) => {
+    const [hour, minute] = timeStr.split(':');
+    const h = parseInt(hour, 10);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 || 12;
+    return `${displayHour}:${minute} ${suffix}`;
+  };
+
+  const handleRemoveActivity = (date, index) => {
+    setItinerary(prev =>
+      prev.map(day =>
+        day.date === date
+          ? { ...day, activities: day.activities.filter((_, i) => i !== index) }
+          : day
+      )
+    );
+  };
+
+  // Handle file input change
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+
+    // Create preview URLs for new files
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  // Remove image by index (both preview and file)
+  const handleRemoveImage = (index) => {
+    setImagePreviews(prev => {
+      // Revoke object URL if it's a blob url
+      const url = prev[index];
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
       }
-    }
-
-    // Update itinerary photoUrls and clear photosToUpload
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((d) => {
-        if (d.date !== date) return d;
-        return {
-          ...d,
-          photoUrls: [...(d.photoUrls || []), ...uploadedUrls],
-          photosToUpload: [],
-        };
-      })
-    );
+      return prev.filter((_, i) => i !== index);
+    });
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Remove photo URL from itinerary day
-  const removePhoto = (date, url) => {
-    setItinerary((oldItinerary) =>
-      oldItinerary.map((d) => {
-        if (d.date !== date) return d;
-        return {
-          ...d,
-          photoUrls: (d.photoUrls || []).filter((u) => u !== url),
-        };
-      })
-    );
+  // Fake image upload function (replace with your real upload API)
+  const uploadImages = async (files) => {
+    // Simulate upload delay
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // For demo, just return fake URLs based on file names
+        const urls = files.map(f => `https://fakeimgserver.com/uploads/${encodeURIComponent(f.name)}`);
+        resolve(urls);
+      }, 1500);
+    });
   };
 
-  // Save full trip data
-  const saveTrip = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
     if (!destination || !startDate || !endDate) {
-      alert("Please fill destination, start and end dates.");
+      setError('Please fill in all fields.');
       return;
     }
 
-    // Compose trip ID: e.g. TRIP# + timestamp or UUID (adjust to your app)
-    const tripId = initialData?.pk || `TRIP#${Date.now()}`;
-
-    // Build trip payload with dates in MM/DD/YYYY format
-    const tripPayload = {
-      pk: tripId,
-      destination,
-      startDate: formatDate(new Date(startDate)),
-      endDate: formatDate(new Date(endDate)),
-      itinerary: itinerary.map((day) => ({
-        date: day.date,
-        activities: day.activities,
-        photoUrls: day.photoUrls || [],
-      })),
-    };
-
     try {
-      const res = await fetch(
-        "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com/createTrip",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tripPayload),
-        }
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to save trip");
+      // Upload images and get URLs
+      let uploadedUrls = [];
+      if (selectedFiles.length > 0) {
+        uploadedUrls = await uploadImages(selectedFiles);
       }
 
-      alert("Trip saved successfully!");
-      if (onSave) onSave(tripPayload);
+      // Combine existing URLs from trip.photoUrls (if any) + newly uploaded URLs
+      const allPhotoUrls = [
+        ...(trip.photoUrls || []),
+        ...uploadedUrls
+      ];
+
+      const itineraryToSave = itinerary.map(day => ({
+        date: day.date,
+        activities: [...day.activities]
+      }));
+
+      onSave({
+        ...trip,
+        destination,
+        startDate,
+        endDate,
+        itinerary: itineraryToSave,
+        photoUrls: allPhotoUrls
+      });
     } catch (err) {
-      alert(`Error saving trip: ${err.message}`);
+      setError('Failed to upload images. Please try again.');
+      console.error(err);
     }
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "auto", fontFamily: "Arial" }}>
-      <h2>{initialData ? "Edit Trip" : "Add Trip"}</h2>
+    <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4">
+      <h4 className="text-forest-green mb-3">Add / Edit Trip</h4>
+      {error && <div className="alert alert-danger">{error}</div>}
 
-      <label>
-        Destination:
+      <div className="mb-3">
+        <label className="form-label">Destination</label>
         <input
           type="text"
+          className="form-control"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
         />
-      </label>
+      </div>
 
-      <label>
-        Start Date:
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label className="form-label">Start Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={startDate ? toInputDate(startDate) : ''}
+            onChange={(e) => setStartDate(fromInputDate(e.target.value))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">End Date</label>
+          <input
+            type="date"
+            className="form-control"
+            value={endDate ? toInputDate(endDate) : ''}
+            min={startDate ? toInputDate(startDate) : ''}
+            onChange={(e) => setEndDate(fromInputDate(e.target.value))}
+          />
+        </div>
+      </div>
+
+      {/* Image upload */}
+      <div className="mb-3">
+        <label className="form-label">Trip Images</label>
         <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          style={{ marginRight: 12, marginBottom: 12 }}
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileChange}
+          className="form-control"
         />
-      </label>
-
-      <label>
-        End Date:
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          style={{ marginBottom: 12 }}
-        />
-      </label>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <h3>Itinerary</h3>
-
-      {itinerary.map((day) => (
-        <div
-          key={day.date}
-          style={{
-            border: "1px solid #ccc",
-            padding: 12,
-            marginBottom: 12,
-            borderRadius: 6,
-          }}
-        >
-          <h4>{day.date}</h4>
-
-          {day.activities.map((activity, idx) => (
-            <div
-              key={idx}
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 8,
-                alignItems: "center",
-              }}
-            >
-              <input
-                type="time"
-                value={activity.time}
-                onChange={(e) =>
-                  updateActivity(day.date, idx, "time", e.target.value)
-                }
-                style={{ width: "120px" }}
-              />
-              <input
-                type="text"
-                placeholder="Activity description"
-                value={activity.name}
-                onChange={(e) =>
-                  updateActivity(day.date, idx, "name", e.target.value)
-                }
-                style={{ flexGrow: 1 }}
-              />
-              <button
-                onClick={() => removeActivity(day.date, idx)}
-                style={{ color: "red" }}
-                title="Remove activity"
-              >
-                &times;
-              </button>
-            </div>
-          ))}
-
-          <button onClick={() => addActivity(day.date)} style={{ marginBottom: 12 }}>
-            + Add Activity
-          </button>
-
-          <div>
-            <label>
-              Upload Photos for {day.date}:{" "}
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => onPhotoChange(day.date, e.target.files)}
-              />
-            </label>
-            <button
-              onClick={() => uploadPhotosForDate(day.date)}
-              disabled={!day.photosToUpload || day.photosToUpload.length === 0}
-              style={{ marginLeft: 8 }}
-            >
-              Upload Photos
-            </button>
-          </div>
-
-          {/* Show uploaded photos */}
-          <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(day.photoUrls || []).map((url, i) => (
-              <div key={i} style={{ position: "relative" }}>
+        {imagePreviews.length > 0 && (
+          <div className="mt-2 d-flex flex-wrap gap-2">
+            {imagePreviews.map((src, i) => (
+              <div key={i} style={{ position: 'relative', width: 100, height: 100 }}>
                 <img
-                  src={url}
-                  alt={`Trip photo ${i + 1}`}
-                  style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 4 }}
+                  src={src}
+                  alt={`Preview ${i}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
                 />
                 <button
-                  onClick={() => removePhoto(day.date, url)}
+                  type="button"
+                  onClick={() => handleRemoveImage(i)}
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    background: "rgba(255,255,255,0.7)",
-                    border: "none",
-                    cursor: "pointer",
-                    fontWeight: "bold",
+                    position: 'absolute',
+                    top: 2,
+                    right: 2,
+                    background: 'rgba(0,0,0,0.5)',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 22,
+                    height: 22,
+                    cursor: 'pointer'
                   }}
-                  title="Remove photo"
+                  aria-label="Remove image"
+                  title="Remove image"
                 >
                   &times;
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      ))}
+        )}
+      </div>
 
-      <button onClick={saveTrip} style={{ padding: "10px 20px", fontSize: 16 }}>
-        Save Trip
-      </button>
-    </div>
+      {itinerary.length > 0 && (
+        <div className="mb-3">
+          <label className="form-label">Itinerary</label>
+          {itinerary.map((day, i) => (
+            <div key={i} className="border rounded p-3 mb-3">
+              <strong>{day.date}</strong>
+              <ul className="list-unstyled">
+                {day.activities.map((activity, j) => (
+                  <li key={j}>
+                    {activity.time} — {activity.name}
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger ms-2"
+                      onClick={() => handleRemoveActivity(day.date, j)}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="d-flex flex-wrap gap-2 mt-2">
+                <TimePicker
+                  disableClock={true}
+                  clearIcon={null}
+                  format="h:mm a"
+                  value={newActivityTime[day.date] || ''}
+                  onChange={(val) => setNewActivityTime({ ...newActivityTime, [day.date]: val })}
+                />
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Activity Description"
+                  value={newActivityName[day.date] || ''}
+                  onChange={(e) => setNewActivityName({ ...newActivityName, [day.date]: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => handleAddActivity(day.date)}
+                >
+                  + Add Activity
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 d-flex justify-content-center">
+        <button type="submit" className="btn btn-terra me-2">Save</button>
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+      </div>
+    </form>
   );
 }
+
