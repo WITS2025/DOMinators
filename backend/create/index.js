@@ -7,16 +7,24 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Methods": "POST",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
 const TABLE_NAME = process.env.LOCATIONS_TABLE || "TripTrek";
 
 export const handler = async (event) => {
+  // Handle CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: CORS_HEADERS,
+      body: "",
+    };
+  }
+
   console.log("Raw event:", event);
 
   let body;
-
   try {
     body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
   } catch (err) {
@@ -34,7 +42,7 @@ export const handler = async (event) => {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Missing required fields." }),
+      body: JSON.stringify({ message: "Missing required fields: id, destination, startDate, endDate" }),
     };
   }
 
@@ -47,8 +55,15 @@ export const handler = async (event) => {
     photoUrls: Array.isArray(day.photoUrls) ? day.photoUrls : [],
   }));
 
-  // Validate activities and photoUrls
+  // Validate itinerary fields
   for (const day of itinerary) {
+    if (!day.date) {
+      return {
+        statusCode: 400,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ message: "Each itinerary day must have a date" }),
+      };
+    }
     for (const activity of day.activities) {
       if (!activity.name || !activity.time) {
         return {
@@ -58,7 +73,6 @@ export const handler = async (event) => {
         };
       }
     }
-
     for (const url of day.photoUrls) {
       if (typeof url !== "string" || !url.startsWith("http")) {
         return {
@@ -70,12 +84,10 @@ export const handler = async (event) => {
     }
   }
 
-  // Check if trip already exists
+  // Check if trip exists - if you want to disallow duplicates
   const getParams = {
     TableName: TABLE_NAME,
-    Key: {
-      pk: tripID,
-    },
+    Key: { pk: tripID },
   };
 
   try {
@@ -96,11 +108,11 @@ export const handler = async (event) => {
     };
   }
 
-  // Validate dates
+  // Date parsing helper
   const parseDate = (str) => {
     if (typeof str !== "string") throw new Error("Date must be a string.");
     const [month, day, year] = str.split("/");
-    if (!month || !day || !year) throw new Error("Invalid date format.");
+    if (!month || !day || !year) throw new Error("Invalid date format, expected MM/DD/YYYY.");
     return new Date(`${year}-${month}-${day}`);
   };
 
@@ -133,13 +145,15 @@ export const handler = async (event) => {
     };
   }
 
-  // Construct item to put in DynamoDB
+  const now = new Date().toISOString();
+
   const tripItem = {
     pk: tripID,
     destination,
     startDate,
     endDate,
-    created_at: new Date().toISOString(),
+    created_at: now,
+    updated_at: now,
     itinerary,
   };
 
@@ -166,3 +180,4 @@ export const handler = async (event) => {
     };
   }
 };
+
