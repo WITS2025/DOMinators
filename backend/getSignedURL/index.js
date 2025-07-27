@@ -5,9 +5,11 @@ const s3 = new AWS.S3();
 const db = new AWS.DynamoDB.DocumentClient();
 
 const bucketName = process.env.BUCKET_NAME;
-const tableName = process.env.LOCATIONS_TABLE; // Set this in your template.yaml
+const tableName = process.env.LOCATIONS_TABLE;
 
 exports.handler = async (event) => {
+  console.log("Incoming event:", event);
+
   try {
     const body = JSON.parse(event.body);
     const { fileType, locationId } = body;
@@ -20,22 +22,22 @@ exports.handler = async (event) => {
     }
 
     const extension = fileType.split('/')[1] || 'jpg';
-    const key = `locations/${locationId}/${uuidv4()}.${extension}`;
+    const imageKey = `locations/${locationId}/${uuidv4()}.${extension}`;
 
-    const params = {
+    const uploadParams = {
       Bucket: bucketName,
-      Key: key,
+      Key: imageKey,
       ContentType: fileType,
-      Expires: 300,
+      Expires: 300, // 5 minutes
     };
 
-    const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
-    const imageUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
+    const uploadUrl = await s3.getSignedUrlPromise('putObject', uploadParams);
+    const imageUrl = `https://${bucketName}.s3.amazonaws.com/${imageKey}`;
 
-  
+    // Update DynamoDB with the image URL
     await db.update({
       TableName: tableName,
-      Key: { id: locationId },
+      Key: { pk: locationId },
       UpdateExpression: 'SET imageUrl = :imageUrl',
       ExpressionAttributeValues: {
         ':imageUrl': imageUrl
@@ -52,10 +54,11 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
-    console.error(err);
+    console.error("Error generating signed URL or updating DB:", err);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Server error' }),
     };
   }
 };
+
