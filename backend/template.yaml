@@ -16,6 +16,11 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
+  TripTrekImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: triptrek-images-bucket  # ⚠️ must be globally unique
+
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -66,7 +71,7 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
@@ -103,7 +108,35 @@ Resources:
             Method: DELETE
             ApiId: !Ref TripTrekAPI
 
+  getSignedUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getSignedUrl
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: getSignedUrl/
+      Environment:
+        Variables:
+          BUCKET_NAME: triptrek-images-bucket
+          LOCATIONS_TABLE: TripTrek
+      Policies:
+        - S3CrudPolicy:
+            BucketName: triptrek-images-bucket
+        - DynamoDBCrudPolicy:
+            TableName: TripTrek
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /getSignedUrl
+            Method: POST
+            ApiId: !Ref TripTrekAPI
+
 Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+
+  ImageBucketName:
+    Description: "S3 bucket storing trip images"
+    Value: !Ref TripTrekImageBucket
