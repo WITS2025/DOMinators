@@ -108,13 +108,13 @@ Resources:
             Method: DELETE
             ApiId: !Ref TripTrekAPI
 
-  getSignedUrl:
+  upload:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: getSignedUrl
+      FunctionName: upload
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: getSignedUrl/
+      CodeUri: upload/
       Environment:
         Variables:
           BUCKET_NAME: triptrek-images-bucket
