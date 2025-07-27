@@ -1,4 +1,3 @@
-// src/components/trips/TripForm.jsx
 import { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
@@ -12,16 +11,16 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [itinerary, setItinerary] = useState(trip.itinerary || []);
   const [newActivityTime, setNewActivityTime] = useState({});
   const [newActivityName, setNewActivityName] = useState({});
+  const [photoUrls, setPhotoUrls] = useState({});
+  const [uploading, setUploading] = useState({});
   const [error, setError] = useState('');
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -34,14 +33,13 @@ export default function TripForm({ trip, onSave, onCancel }) {
     if (startDate && endDate) {
       const start = parseMDY(startDate);
       const end = parseMDY(endDate);
-
       if (end >= start) {
         const days = eachDayOfInterval({ start, end });
-        setItinerary(prev => {
-          const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
-          return days.map(date => {
+        setItinerary((prev) => {
+          const prevMap = Object.fromEntries(prev.map((day) => [day.date, day]));
+          return days.map((date) => {
             const dateStr = format(date, 'MM/dd/yyyy');
-            return prevMap[dateStr] || { date: dateStr, activities: [] };
+            return prevMap[dateStr] || { date: dateStr, activities: [], photoUrls: [] };
           });
         });
       } else {
@@ -52,6 +50,22 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
   }, [startDate, endDate]);
 
+  useEffect(() => {
+    const urlMap = {};
+    itinerary.forEach((day) => {
+      urlMap[day.date] = day.photoUrls || [];
+    });
+    setPhotoUrls(urlMap);
+  }, [itinerary]);
+
+  const formatTime12Hour = (timeStr) => {
+    const [hour, minute] = timeStr.split(':');
+    const h = parseInt(hour, 10);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 || 12;
+    return `${displayHour}:${minute} ${suffix}`;
+  };
+
   const handleAddActivity = (date) => {
     const time = newActivityTime[date];
     const name = newActivityName[date];
@@ -59,10 +73,9 @@ export default function TripForm({ trip, onSave, onCancel }) {
 
     const formattedTime = formatTime12Hour(time);
 
-    setItinerary(prev =>
-      prev.map(day => {
+    setItinerary((prev) =>
+      prev.map((day) => {
         if (day.date !== date) return day;
-
         const updatedActivities = [...day.activities, { time: formattedTime, name }].sort((a, b) => {
           const parseTime = (str) => {
             const [t, mod] = str.split(' ');
@@ -73,7 +86,6 @@ export default function TripForm({ trip, onSave, onCancel }) {
           };
           return parseTime(a.time).localeCompare(parseTime(b.time));
         });
-
         return { ...day, activities: updatedActivities };
       })
     );
@@ -82,22 +94,43 @@ export default function TripForm({ trip, onSave, onCancel }) {
     setNewActivityName({ ...newActivityName, [date]: '' });
   };
 
-  const formatTime12Hour = (timeStr) => {
-    const [hour, minute] = timeStr.split(':');
-    const h = parseInt(hour, 10);
-    const suffix = h >= 12 ? 'PM' : 'AM';
-    const displayHour = h % 12 || 12;
-    return `${displayHour}:${minute} ${suffix}`;
-  };
-
   const handleRemoveActivity = (date, index) => {
-    setItinerary(prev =>
-      prev.map(day =>
+    setItinerary((prev) =>
+      prev.map((day) =>
         day.date === date
           ? { ...day, activities: day.activities.filter((_, i) => i !== index) }
           : day
       )
     );
+  };
+
+  const handlePhotoChange = async (date, files) => {
+    if (!files || files.length === 0) return;
+    setUploading((prev) => ({ ...prev, [date]: true }));
+
+    const uploaded = [...(photoUrls[date] || [])];
+
+    for (const file of files) {
+      try {
+        const res = await fetch('/getSignedUrl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileType: file.type }),
+        });
+        const { uploadUrl, imageUrl } = await res.json();
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+        uploaded.push(imageUrl);
+      } catch (err) {
+        console.error('Upload failed', err);
+      }
+    }
+
+    setPhotoUrls((prev) => ({ ...prev, [date]: uploaded }));
+    setUploading((prev) => ({ ...prev, [date]: false }));
   };
 
   const handleSubmit = (e) => {
@@ -106,16 +139,19 @@ export default function TripForm({ trip, onSave, onCancel }) {
       setError('Please fill in all fields.');
       return;
     }
-    const itineraryToSave = itinerary.map(day => ({
+
+    const itineraryToSave = itinerary.map((day) => ({
       date: day.date,
-      activities: [...day.activities]
+      activities: day.activities,
+      photoUrls: photoUrls[day.date] || [],
     }));
+
     onSave({
       ...trip,
       destination,
       startDate,
       endDate,
-      itinerary: itineraryToSave
+      itinerary: itineraryToSave,
     });
   };
 
@@ -178,7 +214,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
               </ul>
               <div className="d-flex flex-wrap gap-2 mt-2">
                 <TimePicker
-                  disableClock={true}
+                  disableClock
                   clearIcon={null}
                   format="h:mm a"
                   value={newActivityTime[day.date] || ''}
@@ -198,6 +234,28 @@ export default function TripForm({ trip, onSave, onCancel }) {
                 >
                   + Add Activity
                 </button>
+              </div>
+
+              <div className="mt-3">
+                <label className="form-label">Upload Photos for {day.date}</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handlePhotoChange(day.date, e.target.files)}
+                  className="form-control"
+                />
+                {uploading[day.date] && <p className="text-muted">Uploading...</p>}
+                <div className="mt-2 d-flex flex-wrap gap-2">
+                  {(photoUrls[day.date] || []).map((url, index) => (
+                    <img
+                      key={index}
+                      src={url}
+                      alt={`Uploaded ${index}`}
+                      style={{ height: '80px', borderRadius: '6px' }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           ))}
