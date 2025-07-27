@@ -7,7 +7,6 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -15,6 +14,11 @@ Resources:
         - AttributeName: pk
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+
+  TripTrekImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Unique bucket name
 
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
@@ -38,9 +42,12 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x 
       CodeUri: create/
+      Environment:
+        Variables:
+          LOCATIONS_TABLE: !Ref TripTrekTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -56,9 +63,12 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x
       CodeUri: read/
+      Environment:
+        Variables:
+          LOCATIONS_TABLE: !Ref TripTrekTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -66,7 +76,7 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
@@ -74,9 +84,12 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x
       CodeUri: update/
+      Environment:
+        Variables:
+          LOCATIONS_TABLE: !Ref TripTrekTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -92,9 +105,12 @@ Resources:
       Handler: index.handler
       Runtime: nodejs22.x
       CodeUri: delete/
+      Environment:
+        Variables:
+          LOCATIONS_TABLE: !Ref TripTrekTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -103,7 +119,39 @@ Resources:
             Method: DELETE
             ApiId: !Ref TripTrekAPI
 
+  getSignedUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getSignedUrl
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: upload/
+      Environment:
+        Variables:
+          BUCKET_NAME: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Use dynamic name
+          LOCATIONS_TABLE: !Ref TripTrekTable
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Sub "triptrek-images-${AWS::AccountId}-${AWS::Region}"  # ✅ Match S3 bucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TripTrekTable
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /getSignedUrl
+            Method: POST
+            ApiId: !Ref TripTrekAPI
+
 Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+
+  ImageBucketName:
+    Description: "S3 bucket storing trip images"
+    Value: !Ref TripTrekImageBucket
+
+  DynamoDBTableName:
+    Description: "DynamoDB table name for TripTrek"
+    Value: !Ref TripTrekTable

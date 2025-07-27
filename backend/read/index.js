@@ -10,11 +10,31 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "GET,OPTIONS",
 };
 
+const TABLE_NAME = process.env.TABLE_NAME;  // Get table name from environment variable
+
 export const handler = async (event) => {
   console.log("Event received:", event);
 
+  if (!TABLE_NAME) {
+    console.error("Missing TABLE_NAME environment variable");
+    return {
+      statusCode: 500,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Server configuration error: TABLE_NAME is not set." }),
+    };
+  }
+
+  // Handle OPTIONS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: CORS_HEADERS,
+      body: "",
+    };
+  }
+
   const params = {
-    TableName: "TripTrek"
+    TableName: TABLE_NAME,
   };
 
   try {
@@ -25,7 +45,7 @@ export const handler = async (event) => {
       return {
         statusCode: 404,
         headers: CORS_HEADERS,
-        body: JSON.stringify("No trips found"),
+        body: JSON.stringify({ message: "No trips found" }),
       };
     }
 
@@ -39,7 +59,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Error retrieving trip items from DynamoDB"),
+      body: JSON.stringify({ message: "Error retrieving trip items from DynamoDB" }),
     };
   }
 };
