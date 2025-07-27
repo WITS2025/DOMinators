@@ -1,19 +1,37 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  UpdateCommand
-} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Methods": "PATCH,OPTIONS",
 };
 
+const TABLE_NAME = process.env.TABLE_NAME;
+
 export const handler = async (event) => {
   console.log("Event received:", event);
+
+  if (!TABLE_NAME) {
+    console.error("TABLE_NAME environment variable is missing");
+    return {
+      statusCode: 500,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Server configuration error: TABLE_NAME not set" }),
+    };
+  }
+
+  // Handle CORS preflight request
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: CORS_HEADERS,
+      body: "",
+    };
+  }
 
   const tripId = event?.queryStringParameters?.tripId;
 
@@ -21,42 +39,42 @@ export const handler = async (event) => {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Missing 'tripId' in query string"),
+      body: JSON.stringify({ message: "Missing 'tripId' in query string" }),
     };
   }
 
   let requestBody;
   try {
-    requestBody = JSON.parse(event.body);
+    requestBody = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
   } catch {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Invalid JSON body"),
+      body: JSON.stringify({ message: "Invalid JSON body" }),
     };
   }
 
-  const { attributeName, newValue } = requestBody;
+  const { attributeName, newValue } = requestBody || {};
 
-  if (!attributeName || typeof newValue === 'undefined') {
+  if (!attributeName || typeof newValue === "undefined") {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Missing 'attributeName' or 'newValue' in body"),
+      body: JSON.stringify({ message: "Missing 'attributeName' or 'newValue' in body" }),
     };
   }
 
   const params = {
-    TableName: "TripTrek",
+    TableName: TABLE_NAME,
     Key: { pk: tripId },
     UpdateExpression: "set #attr = :val",
     ExpressionAttributeNames: {
-      "#attr": attributeName
+      "#attr": attributeName,
     },
     ExpressionAttributeValues: {
-      ":val": newValue
+      ":val": newValue,
     },
-    ReturnValues: "UPDATED_NEW"
+    ReturnValues: "UPDATED_NEW",
   };
 
   try {
@@ -71,7 +89,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Error updating item in DynamoDB"),
+      body: JSON.stringify({ message: "Error updating item in DynamoDB" }),
     };
   }
 };
