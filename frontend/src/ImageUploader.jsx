@@ -23,12 +23,15 @@ export default function ImageUploader() {
     try {
       const fileType = selectedFile.type;
 
-      // Adjust URL below if your API Gateway URL is different
-      const response = await fetch("/getSignedUrl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileType }),
-      });
+      // Use your actual API Gateway endpoint here:
+      const response = await fetch(
+        "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com/getSignedUrl",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileType }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to get signed URL");
