@@ -23,9 +23,8 @@ export default function ImageUploader() {
     try {
       const fileType = selectedFile.type;
 
-      // Use your actual API Gateway endpoint here:
       const response = await fetch(
-        "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com/getSignedUrl",
+        "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com/generateSignedUrl",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -33,22 +32,17 @@ export default function ImageUploader() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to get signed URL");
-      }
+      if (!response.ok) throw new Error("Failed to get signed URL");
 
       const { uploadUrl, imageUrl } = await response.json();
 
-      // Upload to S3
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
         headers: { "Content-Type": fileType },
         body: selectedFile,
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload file to S3");
-      }
+      if (!uploadResponse.ok) throw new Error("Upload to S3 failed");
 
       setImageUrl(imageUrl);
       setSelectedFile(null);

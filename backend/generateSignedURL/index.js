@@ -3,8 +3,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 
 const BUCKET_NAME = process.env.BUCKET_NAME;
+const REGION = process.env.AWS_REGION;
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: REGION });
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -52,9 +53,9 @@ export const handler = async (event) => {
   });
 
   try {
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 }); // 1 min
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
 
-    const imageUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${fileName}`;
 
     return {
       statusCode: 200,

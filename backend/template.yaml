@@ -6,7 +6,9 @@ Resources:
 
   TripTrekTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
     Properties:
+      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -40,7 +42,7 @@ Resources:
     Properties:
       FunctionName: createTrip
       Handler: index.handler
-      Runtime: nodejs22.x 
+      Runtime: nodejs22.x
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
@@ -70,7 +72,7 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
@@ -117,8 +119,9 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME: !Ref UploadBucket
+          AWS_REGION: !Ref AWS::Region
       Policies:
-        - S3WritePolicy:
+        - S3CrudPolicy:
             BucketName: !Ref UploadBucket
       Events:
         ApiForMyApp:
@@ -137,3 +140,6 @@ Outputs:
     Description: "DynamoDB Table Name"
     Value: !Ref TripTrekTable
 
+  BucketName:
+    Description: "S3 Bucket for uploads"
+    Value: !Ref UploadBucket
