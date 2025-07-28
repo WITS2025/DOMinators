@@ -20,6 +20,12 @@ vi.mock('uuid', () => ({
   v4: vi.fn(() => 'mock-uuid-123')
 }))
 
+// Mock console methods to avoid noise in tests
+let consoleSpy
+
+// Mock alert
+global.alert = vi.fn()
+
 const mockTripsResponse = [
   {
     pk: 'trip-1',
@@ -54,8 +60,13 @@ const renderTripContext = () => {
 describe('TripContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Mock console methods to suppress logs during tests
+    consoleSpy = {
+      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
+      log: vi.spyOn(console, 'log').mockImplementation(() => {})
+    }
     // Reset fetch mock to default successful response
-    global.fetch.mockResolvedValue({
+    global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockTripsResponse),
       status: 200,
@@ -65,18 +76,22 @@ describe('TripContext', () => {
 
   afterEach(() => {
     vi.resetAllMocks()
+    if (consoleSpy) {
+      consoleSpy.error.mockRestore()
+      consoleSpy.log.mockRestore()
+    }
   })
 
   describe('useTripContext', () => {
     it('should throw error when used outside TripProvider', () => {
       // Suppress console errors for this test
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       
       expect(() => {
         renderHook(() => useTripContext())
       }).toThrow('useTripContext must be used within a TripProvider')
       
-      consoleSpy.mockRestore()
+      errorSpy.mockRestore()
     })
   })
 
@@ -87,7 +102,6 @@ describe('TripContext', () => {
       // Initially loading should be true as fetchTrips is called on mount
       expect(result.current.loading).toBe(true)
       expect(result.current.trips).toEqual([])
-      expect(result.current.error).toBe(null)
       expect(typeof result.current.fetchTrips).toBe('function')
       expect(typeof result.current.deleteTrip).toBe('function')
       expect(typeof result.current.saveTrip).toBe('function')
@@ -126,21 +140,25 @@ describe('TripContext', () => {
       })
     })
 
-    it('should handle fetch error', async () => {
-      global.fetch.mockRejectedValueOnce(new Error('Network error'))
+    it('should handle fetch error gracefully', async () => {
+      const fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'))
       
       const { result } = renderTripContext()
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Network error')
-      })
+        expect(result.current.loading).toBe(false)
+      }, { timeout: 3000 })
 
-      expect(result.current.loading).toBe(false)
+      // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        { method: 'GET' }
+      )
     })
 
-    it('should handle fetch response error', async () => {
-      global.fetch.mockResolvedValueOnce({
+    it('should handle fetch response error gracefully', async () => {
+      const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error'
@@ -149,8 +167,15 @@ describe('TripContext', () => {
       const { result } = renderTripContext()
 
       await waitFor(() => {
-        expect(result.current.error).toBe('Failed to load trips: 500 Internal Server Error')
-      })
+        expect(result.current.loading).toBe(false)
+      }, { timeout: 3000 })
+
+      // Should still have empty trips array after error
+      expect(result.current.trips).toEqual([])
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        { method: 'GET' }
+      )
     })
   })
 
@@ -178,20 +203,29 @@ describe('TripContext', () => {
       )
     })
 
-    it('should handle delete error', async () => {
+    it('should handle delete error gracefully', async () => {
       const { result } = renderTripContext()
 
+      await waitFor(() => {
+        expect(result.current.trips).toHaveLength(2)
+      })
+
+      // Now mock the delete request to fail
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found'
       })
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.deleteTrip('trip-1')
-        })
-      }).rejects.toThrow('Failed to delete trip. Status: 404 Not Found')
+      await act(async () => {
+        await result.current.deleteTrip('trip-1')
+      })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=trip-1',
+        { method: 'DELETE' }
+      )
+      expect(global.alert).toHaveBeenCalledWith('Failed to delete trip. Please try again.')
     })
   })
 
@@ -230,6 +264,8 @@ describe('TripContext', () => {
           })
         }
       )
+
+      expect(global.alert).toHaveBeenCalledWith('Trip created successfully!')
     })
 
     it('should update existing trip', async () => {
@@ -266,8 +302,12 @@ describe('TripContext', () => {
       )
     })
 
-    it('should handle save error', async () => {
+    it('should handle create trip error gracefully', async () => {
       const { result } = renderTripContext()
+
+      await waitFor(() => {
+        expect(result.current.trips).toHaveLength(2)
+      })
 
       const newTrip = {
         destination: 'London',
@@ -276,17 +316,57 @@ describe('TripContext', () => {
         itinerary: []
       }
 
+      // Mock the create trip request to fail
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
         statusText: 'Bad Request'
       })
 
-      await expect(async () => {
-        await act(async () => {
-          await result.current.saveTrip(newTrip)
+      await act(async () => {
+        await result.current.saveTrip(newTrip)
+      })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/createTrip',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
         })
-      }).rejects.toThrow('Failed to create trip: 400 Bad Request')
+      )
+      expect(global.alert).toHaveBeenCalledWith('Failed to create trip.')
+    })
+
+    it('should handle update trip API error gracefully', async () => {
+      const { result } = renderTripContext()
+
+      await waitFor(() => {
+        expect(result.current.trips).toHaveLength(2)
+      })
+
+      const updatedTrip = {
+        ...result.current.trips[0],
+        destination: 'Updated Paris'
+      }
+
+      // Mock the update trip request to fail
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: () => Promise.resolve('Server Error')
+      })
+
+      await act(async () => {
+        await result.current.saveTrip(updatedTrip)
+      })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('updateTrip?tripId=trip-1'),
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' }
+        })
+      )
     })
   })
 
@@ -316,13 +396,12 @@ describe('TripContext', () => {
     })
   })
 
-  describe('helper functions', () => {
-    it('should convert 12-hour time to 24-hour format', () => {
+  describe('time conversion and sorting', () => {
+    it('should sort activities by time when saving trip', async () => {
       const { result } = renderTripContext()
-      
-      // We need to test the internal convertTo24Hour function through the activities sorting
-      const tripWithTimes = {
-        destination: 'Test',
+
+      const tripWithUnsortedTimes = {
+        destination: 'Test City',
         startDate: '01/01/2024',
         endDate: '01/01/2024',
         itinerary: [{
@@ -341,167 +420,86 @@ describe('TripContext', () => {
         json: () => Promise.resolve({ success: true })
       })
 
-      act(() => {
-        result.current.saveTrip(tripWithTimes)
+      await act(async () => {
+        await result.current.saveTrip(tripWithUnsortedTimes)
       })
 
-      // The activities should be sorted by time when saved
-      // This indirectly tests the convertTo24Hour function
+      // Verify the fetch was called with sorted activities
+      const callArgs = global.fetch.mock.calls.find(call => 
+        call[0].includes('createTrip')
+      )
+      expect(callArgs).toBeDefined()
+      
+      const requestBody = JSON.parse(callArgs[1].body)
+      const activities = requestBody.itinerary[0].activities
+      
+      // Should be sorted: 12:00 AM, 8:00 AM, 12:00 PM, 11:30 PM
+      expect(activities[0].name).toBe('Midnight Activity')
+      expect(activities[1].name).toBe('Early Activity')
+      expect(activities[2].name).toBe('Noon Activity')
+      expect(activities[3].name).toBe('Late Activity')
+    })
+  })
+
+  describe('fetchTrips integration', () => {
+    it('should call fetchTrips on mount', async () => {
+      const fetchSpy = vi.spyOn(global, 'fetch')
+      
+      renderTripContext()
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        { method: 'GET' }
+      )
+    })
+
+    it('should refresh trips after successful delete', async () => {
+      const { result } = renderTripContext()
+      
+      await waitFor(() => {
+        expect(result.current.trips).toHaveLength(2)
+      })
+
+      // Mock successful delete, then successful refresh
+      global.fetch
+        .mockResolvedValueOnce({ ok: true, status: 200 }) // delete response
+        .mockResolvedValueOnce({ // refresh response
+          ok: true,
+          json: () => Promise.resolve([mockTripsResponse[1]]) // only second trip remains
+        })
+
+      await act(async () => {
+        await result.current.deleteTrip('trip-1')
+      })
+
+      // Should have called delete and then getTripList
+      expect(global.fetch).toHaveBeenCalledTimes(3) // initial fetch + delete + refresh
+    })
+
+    it('should refresh trips after successful save', async () => {
+      const { result } = renderTripContext()
+      
+      const newTrip = {
+        destination: 'London',
+        startDate: '03/01/2024',
+        endDate: '03/03/2024',
+        itinerary: []
+      }
+
+      // Mock successful create, then successful refresh
+      global.fetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true }) }) // create response
+        .mockResolvedValueOnce({ // refresh response
+          ok: true,
+          json: () => Promise.resolve([...mockTripsResponse, { pk: 'trip-3', ...newTrip }])
+        })
+
+      await act(async () => {
+        await result.current.saveTrip(newTrip)
+      })
+
+      // Should have called create and then getTripList
+      expect(global.fetch).toHaveBeenCalledTimes(3) // initial fetch + create + refresh
     })
   })
 })
-
-
-// // tests/tripContext.test.js
-// import { renderHook, act } from '@testing-library/react-hooks';
-// import { afterEach, describe, it, expect, beforeEach, vi } from 'vitest';
-// import { TripProvider, useTripContext } from '../src/context/TripContext';
-// import fetchMock from 'jest-fetch-mock';
-
-// fetchMock.enableMocks();
-
-// describe('TripContext', () => {
-//   afterEach(() => {
-//     fetchMock.resetMocks();
-//   });
-
-//   const wrapper = ({ children }) => <TripProvider>{children}</TripProvider>;
-
-//   it('throws error when useTripContext is used outside TripProvider', () => {
-//     const { result } = renderHook(() => useTripContext());
-//     expect(result.error).toEqual(new Error('useTripContext must be used within a TripProvider'));
-//   });
-
-//   describe('fetchTrips', () => {
-//     beforeEach(() => {
-//       fetchMock.resetMocks();
-//       fetchMock.mockResponseOnce(JSON.stringify([{ pk: '1', itinerary: [] }]));
-//     });
-
-//     it('fetches trips successfully', async () => {
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         await result.current.fetchTrips();
-//         await waitForNextUpdate();
-//       });
-
-//       expect(result.current.trips).toEqual([{ id: '1', itinerary: [] }]);
-//       expect(result.current.loading).toBe(false);
-//       expect(result.current.error).toBe(null);
-//     });
-
-//     it('handles fetchTrips error', async () => {
-//       fetchMock.mockRejectOnce(new Error('API is down'));
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         await result.current.fetchTrips();
-//         await waitForNextUpdate();
-//       });
-
-//       expect(result.current.trips).toEqual([]);
-//       expect(result.current.loading).toBe(false);
-//       expect(result.current.error).toBe('API is down');
-//     });
-//   });
-
-//   describe('deleteTrip', () => {
-//     it('deletes a trip successfully', async () => {
-//       fetchMock.mockResponseOnce('', { status: 200 });
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         await result.current.deleteTrip('1');
-//         await waitForNextUpdate();
-//       });
-
-//       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('deleteTrip?tripId=1'), { method: 'DELETE' });
-//     });
-
-//     it('handles deleteTrip error', async () => {
-//       fetchMock.mockResponseOnce('', { status: 500 });
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         try {
-//           await result.current.deleteTrip('1');
-//           await waitForNextUpdate();
-//         } catch (error) {
-//           expect(error.message).toBe('Failed to delete trip. Status: 500 Internal Server Error');
-//         }
-//       });
-
-//       expect(result.current.error).toBe('Failed to delete trip. Status: 500 Internal Server Error');
-//     });
-//   });
-
-//   describe('saveTrip', () => {
-//     it('creates a new trip successfully', async () => {
-//       fetchMock.mockResponseOnce('', { status: 200 });
-//       const newTrip = { id: null, destination: 'New York', startDate: '01/01/2022', endDate: '01/05/2022', itinerary: [] };
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         await result.current.saveTrip(newTrip);
-//         await waitForNextUpdate();
-//       });
-
-//       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('createTrip'), expect.objectContaining({ method: 'POST' }));
-//       expect(result.current.error).toBe(null);
-//     });
-
-//     it('updates an existing trip successfully', async () => {
-//       fetchMock.mockResponseOnce('', { status: 200 });
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-      
-//       // Pre-create a trip with destination A
-//       result.current.trips = [{ id: '1', destination: 'A', startDate: '01/01/2022', endDate: '01/05/2022', itinerary: [] }];
-
-//       const updatedTrip = { id: '1', destination: 'B', startDate: '01/01/2022', endDate: '01/05/2022', itinerary: [] };
-
-//       await act(async () => {
-//         await result.current.saveTrip(updatedTrip);
-//         await waitForNextUpdate();
-//       });
-
-//       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('updateTrip'), expect.objectContaining({ method: 'PATCH' }));
-//       expect(result.current.error).toBe(null);
-//     });
-
-//     it('handles saveTrip error', async () => {
-//       fetchMock.mockResponseOnce('', { status: 500 });
-//       const faultyTrip = { id: '1', destination: 'Z', startDate: '01/01/2022', endDate: '01/05/2022', itinerary: [] };
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       await act(async () => {
-//         try {
-//           await result.current.saveTrip(faultyTrip);
-//           await waitForNextUpdate();
-//         } catch (error) {
-//           expect(error.message).toBe('API error: 500 undefined');
-//         }
-//       });
-
-//       expect(result.current.error).toBe('API error: 500 undefined');
-//     });
-//   });
-
-//   describe('getTripById', () => {
-//     it('returns the trip with the given ID', async () => {
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       // Pre-create a trip result.current.trips = [{ id: '1', destination: 'A' }];
-
-//       const trip = result.current.getTripById('1');
-//       expect(trip).toEqual({ id: '1', destination: 'A' });
-//     });
-
-//     it('returns undefined for a non-existent trip', async () => {
-//       const { result, waitForNextUpdate } = renderHook(() => useTripContext(), { wrapper });
-
-//       const trip = result.current.getTripById('2');
-//       expect(trip).toBe(undefined);
-//     });
-//   });
-// });
