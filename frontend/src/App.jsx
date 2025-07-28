@@ -1,5 +1,9 @@
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
+//Imports for user login
+import './amplifyConfig';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+
 // Import your page components
 import Home from './pages/Home';
 import About from './pages/About';
@@ -28,4 +32,4 @@ function App() {
   );
 }
 
-export default App;
+export default withAuthenticator(App);
