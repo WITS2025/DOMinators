@@ -1,9 +1,9 @@
-// src/components/trips/TripForm.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import { format, eachDayOfInterval, parse } from 'date-fns';
+import ImageUploader from "../ImageUploader"; // Adjust path if needed
 
 export default function TripForm({ trip, onSave, onCancel }) {
   const [destination, setDestination] = useState(trip.destination || '');
@@ -14,14 +14,12 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -52,6 +50,14 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
   }, [startDate, endDate]);
 
+  const formatTime12Hour = (timeStr) => {
+    const [hour, minute] = timeStr.split(':');
+    const h = parseInt(hour, 10);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 || 12;
+    return `${displayHour}:${minute} ${suffix}`;
+  };
+
   const handleAddActivity = (date) => {
     const time = newActivityTime[date];
     const name = newActivityName[date];
@@ -80,14 +86,6 @@ export default function TripForm({ trip, onSave, onCancel }) {
 
     setNewActivityTime({ ...newActivityTime, [date]: '' });
     setNewActivityName({ ...newActivityName, [date]: '' });
-  };
-
-  const formatTime12Hour = (timeStr) => {
-    const [hour, minute] = timeStr.split(':');
-    const h = parseInt(hour, 10);
-    const suffix = h >= 12 ? 'PM' : 'AM';
-    const displayHour = h % 12 || 12;
-    return `${displayHour}:${minute} ${suffix}`;
   };
 
   const handleRemoveActivity = (date, index) => {
@@ -163,9 +161,9 @@ export default function TripForm({ trip, onSave, onCancel }) {
             <div key={i} className="border rounded p-3 mb-3">
               <strong>{day.date}</strong>
               <ul className="list-unstyled">
-                {day.activities.map((activity, j) => (
+                {day.activities.map((act, j) => (
                   <li key={j}>
-                    {activity.time} — {activity.name}
+                    {act.time} — {act.name}
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger ms-2"
@@ -203,6 +201,11 @@ export default function TripForm({ trip, onSave, onCancel }) {
           ))}
         </div>
       )}
+
+      {/* Image uploader section */}
+      <div className="mb-4">
+        <ImageUploader locationName={destination || trip.destination} />
+      </div>
 
       <div className="mt-3 d-flex justify-content-center">
         <button type="submit" className="btn btn-terra me-2">Save</button>
