@@ -124,11 +124,11 @@ describe('TripDetail', () => {
     renderWithProviders(<TripDetail />)
 
     await waitFor(() => {
-      expect(screen.getByText('Itinerary')).toBeInTheDocument()
+      expect(screen.getByText('Paris')).toBeInTheDocument()
     })
 
     // Check trip destination and dates
-    expect(screen.getByText('Paris — 07/20/2025 to 07/22/2025')).toBeInTheDocument()
+    expect(screen.getByText('07/20/2025 — 07/22/2025')).toBeInTheDocument()
 
     // Check itinerary days
     expect(screen.getByText('07/20/2025')).toBeInTheDocument()
@@ -148,7 +148,7 @@ describe('TripDetail', () => {
     renderWithProviders(<TripDetail />)
 
     await waitFor(() => {
-      expect(screen.getByText('Itinerary')).toBeInTheDocument()
+      expect(screen.getByText('Paris')).toBeInTheDocument()
     })
 
     expect(screen.getByText('No activities planned for this day.')).toBeInTheDocument()
@@ -213,7 +213,7 @@ describe('TripDetail', () => {
     fireEvent.click(screen.getByText('Cancel'))
 
     await waitFor(() => {
-      expect(screen.getByText('Itinerary')).toBeInTheDocument()
+      expect(screen.getByText('Paris')).toBeInTheDocument()
     })
     expect(screen.queryByText('Add / Edit Trip')).not.toBeInTheDocument()
   })
