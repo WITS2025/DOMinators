@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export default function ImageUploader() {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [locationName, setLocationName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState("");
@@ -11,9 +12,18 @@ export default function ImageUploader() {
     setError("");
   };
 
+  const onLocationChange = (e) => {
+    setLocationName(e.target.value);
+    setError("");
+  };
+
   const uploadFile = async () => {
     if (!selectedFile) {
       setError("Please select a file first.");
+      return;
+    }
+    if (!locationName.trim()) {
+      setError("Please enter a location name.");
       return;
     }
 
@@ -28,7 +38,7 @@ export default function ImageUploader() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileType }),
+          body: JSON.stringify({ fileType, locationName: locationName.trim() }),
         }
       );
 
@@ -46,6 +56,7 @@ export default function ImageUploader() {
 
       setImageUrl(imageUrl);
       setSelectedFile(null);
+      setLocationName("");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -55,14 +66,22 @@ export default function ImageUploader() {
 
   return (
     <div>
+      <input
+        type="text"
+        placeholder="Enter location name"
+        value={locationName}
+        onChange={onLocationChange}
+      />
+      <br />
       <input type="file" accept="image/*" onChange={onFileChange} />
+      <br />
       <button onClick={uploadFile} disabled={uploading}>
         {uploading ? "Uploading..." : "Upload Image"}
       </button>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {imageUrl && (
         <div>
-          <p>Uploaded Image:</p>
+          <p>Uploaded Image for "{locationName}":</p>
           <img src={imageUrl} alt="Uploaded" style={{ maxWidth: "300px" }} />
         </div>
       )}

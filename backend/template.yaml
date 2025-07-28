@@ -8,7 +8,6 @@ Resources:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     Properties:
-      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -118,8 +117,7 @@ Resources:
       CodeUri: generateSignedUrl/
       Environment:
         Variables:
-          BUCKET_NAME: !Ref UploadBucket
-          AWS_REGION: !Ref AWS::Region
+          BUCKET_NAME: !Ref UploadBucket  # ✅ AWS_REGION removed
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref UploadBucket

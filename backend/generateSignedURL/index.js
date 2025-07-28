@@ -13,6 +13,16 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
+// Simple slugify to sanitize location name
+const slugify = (text) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")          // Replace spaces with -
+    .replace(/[^\w\-]+/g, "")      // Remove all non-word chars
+    .replace(/\-\-+/g, "-");       // Replace multiple - with single -
+
 export const handler = async (event) => {
   if (event.requestContext?.http?.method === "OPTIONS") {
     return {
@@ -33,7 +43,7 @@ export const handler = async (event) => {
     };
   }
 
-  const { fileType } = body;
+  const { fileType, locationName } = body;
 
   if (!fileType) {
     return {
@@ -42,9 +52,18 @@ export const handler = async (event) => {
       body: JSON.stringify({ message: "Missing fileType in request body" }),
     };
   }
+  
+  if (!locationName) {
+    return {
+      statusCode: 400,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Missing locationName in request body" }),
+    };
+  }
 
   const extension = fileType.split("/")[1];
-  const fileName = `uploads/${uuidv4()}.${extension}`;
+  const safeLocationName = slugify(locationName);
+  const fileName = `locations/${safeLocationName}/${uuidv4()}.${extension}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
