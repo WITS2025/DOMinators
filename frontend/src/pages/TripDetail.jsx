@@ -57,8 +57,11 @@ export default function TripDetail() {
   return (
     <div className="container bg-light-sand py-5 text-slate-gray">
       <h2 className="text-center mb-4 text-forest-green">
-        {editingTrip ? `${trip.destination}` : 'Itinerary'}
+        {`${trip.destination}`}
       </h2>
+      <h5 className="text-forest-green mb-3 text-center">
+        {trip.startDate} — {trip.endDate}
+      </h5>
 
       {editingTrip ? (
         <TripForm
@@ -82,10 +85,6 @@ export default function TripDetail() {
               Edit Trip
             </button>
           </div>
-
-          <h4 className="text-forest-green mb-3 text-center">
-            {trip.destination} — {trip.startDate} to {trip.endDate}
-          </h4>
 
           {trip.itinerary && trip.itinerary.length > 0 ? (
             trip.itinerary.map((dayPlan, idx) => (
