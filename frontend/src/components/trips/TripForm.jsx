@@ -1,4 +1,3 @@
-// src/components/trips/TripForm.jsx
 import { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
@@ -13,15 +12,15 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityTime, setNewActivityTime] = useState({});
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState(trip.photoUrls || []);
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -100,23 +99,72 @@ export default function TripForm({ trip, onSave, onCancel }) {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setImagePreviews(prev => {
+      const url = prev[index];
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImages = async (files) => {
+    // Replace this mock with a real S3 signed URL upload process
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const urls = files.map(f => `https://fakeimgserver.com/uploads/${encodeURIComponent(f.name)}`);
+        resolve(urls);
+      }, 1000);
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (!destination || !startDate || !endDate) {
       setError('Please fill in all fields.');
       return;
     }
-    const itineraryToSave = itinerary.map(day => ({
-      date: day.date,
-      activities: [...day.activities]
-    }));
-    onSave({
-      ...trip,
-      destination,
-      startDate,
-      endDate,
-      itinerary: itineraryToSave
-    });
+
+    try {
+      let uploadedUrls = [];
+      if (selectedFiles.length > 0) {
+        uploadedUrls = await uploadImages(selectedFiles);
+      }
+
+      const allPhotoUrls = [
+        ...(trip.photoUrls || []),
+        ...uploadedUrls
+      ];
+
+      const itineraryToSave = itinerary.map(day => ({
+        date: day.date,
+        activities: [...day.activities]
+      }));
+
+      onSave({
+        ...trip,
+        destination,
+        startDate,
+        endDate,
+        itinerary: itineraryToSave,
+        photoUrls: allPhotoUrls
+      });
+    } catch (err) {
+      setError('Failed to upload images. Please try again.');
+      console.error(err);
+    }
   };
 
   return (
@@ -154,6 +202,50 @@ export default function TripForm({ trip, onSave, onCancel }) {
             onChange={(e) => setEndDate(fromInputDate(e.target.value))}
           />
         </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="form-label">Trip Images</label>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileChange}
+          className="form-control"
+        />
+        {imagePreviews.length > 0 && (
+          <div className="mt-2 d-flex flex-wrap gap-2">
+            {imagePreviews.map((src, i) => (
+              <div key={i} style={{ position: 'relative', width: 100, height: 100 }}>
+                <img
+                  src={src}
+                  alt={`Preview ${i}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(i)}
+                  style={{
+                    position: 'absolute',
+                    top: 2,
+                    right: 2,
+                    background: 'rgba(0,0,0,0.5)',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: 22,
+                    height: 22,
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Remove image"
+                  title="Remove image"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {itinerary.length > 0 && (
@@ -211,3 +303,4 @@ export default function TripForm({ trip, onSave, onCancel }) {
     </form>
   );
 }
+
