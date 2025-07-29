@@ -1,7 +1,7 @@
 // src/pages/TripDetail.jsx
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import TripForm from '../components/trips/TripForm'
+import TripForm from '../components/TripForm'
 import { useTripContext } from '../context/TripContext'
 
 export default function TripDetail() {
