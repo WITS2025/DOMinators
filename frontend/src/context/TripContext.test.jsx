@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { TripProvider, useTripContext } from './TripContext'
 
+const API_Endpoint = 'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
+
 // Mock date-fns
 vi.mock('date-fns', () => ({
   format: vi.fn((date, formatStr) => {
@@ -121,7 +123,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        `${API_Endpoint}getTripList`,
         { method: 'GET' }
       )
 
@@ -152,7 +154,7 @@ describe('TripContext', () => {
       // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        `${API_Endpoint}getTripList`,
         { method: 'GET' }
       )
     })
@@ -173,7 +175,7 @@ describe('TripContext', () => {
       // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        `${API_Endpoint}getTripList`,
         { method: 'GET' }
       )
     })
@@ -198,7 +200,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=trip-1',
+        `${API_Endpoint}deleteTrip?tripId=trip-1`,
         { method: 'DELETE' }
       )
     })
@@ -222,7 +224,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/deleteTrip?tripId=trip-1',
+        `${API_Endpoint}deleteTrip?tripId=trip-1`,
         { method: 'DELETE' }
       )
       expect(global.alert).toHaveBeenCalledWith('Failed to delete trip. Please try again.')
@@ -250,7 +252,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/createTrip',
+        `${API_Endpoint}createTrip`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -290,7 +292,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/updateTrip?tripId=trip-1',
+        `${API_Endpoint}deleteTrip?tripId=trip-1`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -328,7 +330,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/createTrip',
+        `${API_Endpoint}createTrip`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
@@ -448,7 +450,7 @@ describe('TripContext', () => {
       renderTripContext()
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/getTripList',
+        `${API_Endpoint}getTripList`,
         { method: 'GET' }
       )
     })
