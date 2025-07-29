@@ -292,7 +292,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}deleteTrip?tripId=trip-1`,
+        `${API_Endpoint}updateTrip?tripId=trip-1`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
