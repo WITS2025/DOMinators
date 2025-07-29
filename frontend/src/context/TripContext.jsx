@@ -98,7 +98,6 @@ export const TripProvider = ({ children }) => {
       }
 
       const result = await res.json()
-      console.log('Trip updated via API:', result)
       return result
     } catch (err) {
       console.error('API call failed:', err)
@@ -172,10 +171,8 @@ export const TripProvider = ({ children }) => {
           }
 
           const data = await response.json();
-          console.log('Trip successfully created:', data);
           alert('Trip created successfully!');
         } catch (error) {
-          console.error('Error creating trip:', error);
           alert('Failed to create trip.');
         }
       };
@@ -203,9 +200,6 @@ export const TripProvider = ({ children }) => {
     saveTrip,
     getTripById
   }
-
-  console.log('TripProvider value:', { trips, loading }) // Add this line before return
-
 
   return (
     <TripContext.Provider value={value}>
