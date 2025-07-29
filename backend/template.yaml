@@ -1,6 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Lambda + API Gateway using SAM
+Description: TripTrek API with Lambda, DynamoDB, and pre-signed S3 upload support
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 10
+    Environment:
+      Variables:
+        AWS_REGION: !Ref AWS::Region
 
 Resources:
 
@@ -35,7 +43,6 @@ Resources:
     Properties:
       FunctionName: createTrip
       Handler: index.handler
-      Runtime: nodejs22.x 
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
@@ -53,7 +60,6 @@ Resources:
     Properties:
       FunctionName: getTripList
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
@@ -65,13 +71,12 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: updateTrip
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
@@ -89,7 +94,6 @@ Resources:
     Properties:
       FunctionName: deleteTrip
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
@@ -107,12 +111,10 @@ Resources:
     Properties:
       FunctionName: saveImageMetadata
       Handler: saveImageMetadata.handler
-      Runtime: nodejs22.x
       CodeUri: saveImageMetadata/
       Environment:
         Variables:
           TABLE_NAME: !Ref TripTrekTable
-          AWS_REGION: !Ref AWS::Region
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TripTrekTable
@@ -124,7 +126,31 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrekAPI
 
+  generateUploadUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: generateUploadUrl
+      Handler: index.handler
+      CodeUri: generateUploadUrl/
+      Environment:
+        Variables:
+          BUCKET_NAME: my-location-images-bucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /generateUploadUrl
+            Method: POST
+            ApiId: !Ref TripTrekAPI
+
 Outputs:
-  ApiUrl:
-    Description: "HTTP API endpoint base URL"
+  TripTrekApiUrl:
+    Description: "TripTrek HTTP API Endpoint"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+
