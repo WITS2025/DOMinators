@@ -13,8 +13,17 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
+// Simple slugify to sanitize location name
+const slugify = (text) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")          // Replace spaces with -
+    .replace(/[^\w\-]+/g, "")      // Remove all non-word chars
+    .replace(/\-\-+/g, "-");       // Replace multiple - with single -
+
 export const handler = async (event) => {
-  // Handle CORS preflight
   if (event.requestContext?.http?.method === "OPTIONS") {
     return {
       statusCode: 200,
@@ -36,16 +45,25 @@ export const handler = async (event) => {
 
   const { fileType, locationName } = body;
 
-  if (!fileType || !locationName) {
+  if (!fileType) {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Missing fileType or locationName" }),
+      body: JSON.stringify({ message: "Missing fileType in request body" }),
+    };
+  }
+
+  if (!locationName) {
+    return {
+      statusCode: 400,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ message: "Missing locationName in request body" }),
     };
   }
 
   const extension = fileType.split("/")[1];
-  const fileName = `uploads/${encodeURIComponent(locationName)}/${uuidv4()}.${extension}`;
+  const safeLocationName = slugify(locationName);
+  const fileName = `locations/${safeLocationName}/${uuidv4()}.${extension}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
@@ -54,7 +72,7 @@ export const handler = async (event) => {
   });
 
   try {
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 minutes
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
 
     const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${fileName}`;
 
@@ -72,4 +90,3 @@ export const handler = async (event) => {
     };
   }
 };
-
