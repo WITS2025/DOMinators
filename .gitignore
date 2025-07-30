@@ -16,6 +16,8 @@ dist-ssr
 
 .aws-sam/
 
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

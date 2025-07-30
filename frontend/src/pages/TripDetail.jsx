@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import TripForm from '../components/TripForm'
 import { useTripContext } from '../context/TripContext'
+import TripMap from '../components/TripMap'
 
 export default function TripDetail() {
   const { tripId } = useParams()
@@ -117,6 +118,7 @@ export default function TripDetail() {
               <p>No itinerary available for this trip.</p>
             </div>
           )}
+          <TripMap destination={trip.destination} />
         </div>
       )}
     </div>
