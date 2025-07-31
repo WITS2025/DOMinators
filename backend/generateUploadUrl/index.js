@@ -13,17 +13,17 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
-// Simple slugify to sanitize location name
 const slugify = (text) =>
   text
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, "-")          // Replace spaces with -
-    .replace(/[^\w\-]+/g, "")      // Remove all non-word chars
-    .replace(/\-\-+/g, "-");       // Replace multiple - with single -
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-");
 
 export const handler = async (event) => {
+  // Handle CORS preflight
   if (event.requestContext?.http?.method === "OPTIONS") {
     return {
       statusCode: 200,
@@ -45,19 +45,11 @@ export const handler = async (event) => {
 
   const { fileType, locationName } = body;
 
-  if (!fileType) {
+  if (!fileType || !locationName) {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Missing fileType in request body" }),
-    };
-  }
-
-  if (!locationName) {
-    return {
-      statusCode: 400,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Missing locationName in request body" }),
+      body: JSON.stringify({ message: "Missing fileType or locationName" }),
     };
   }
 
@@ -72,7 +64,7 @@ export const handler = async (event) => {
   });
 
   try {
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 minutes
 
     const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${fileName}`;
 
@@ -86,7 +78,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Error generating signed URL" }),
+      body: JSON.stringify({ message: "Failed to generate signed URL" }),
     };
   }
 };
