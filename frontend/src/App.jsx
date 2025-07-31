@@ -1,35 +1,26 @@
-import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-
-//Imports for user login
-import './amplifyConfig';
-import { withAuthenticator } from '@aws-amplify/ui-react';
-
-// Import your page components
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import NavigationBar from './components/NavigationBar';
 import Home from './pages/Home';
 import About from './pages/About';
 import ContactUs from './pages/ContactUs';
 import Trips from './pages/Trips';
-
-import NavigationBar from './components/NavigationBar';
-
 
 function App() {
   return (
     <Router>
       <div>
         <NavigationBar />
-
-        {/* Route Definitions */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/trips" element={<Trips />} />
-         
         </Routes>
       </div>
     </Router>
   );
 }
 
-export default withAuthenticator(App);
+export default App;
+
+

@@ -16,6 +16,7 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
+
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:

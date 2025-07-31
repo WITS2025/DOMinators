@@ -12,6 +12,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "aws-amplify": "^6.15.4",
     "bootstrap": "^5.3.7",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
