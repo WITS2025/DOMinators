@@ -4,17 +4,15 @@ import App from './App.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 
-
-import { Amplify, Auth } from 'aws-amplify';
+import { Amplify } from 'aws-amplify';
+import { getCurrentUser } from 'aws-amplify/auth';
 import { Authenticator } from '@aws-amplify/ui-react';
 import awsconfig from './aws-exports'
 
-Amplify.configure(awsconfig);                                                         
+Amplify.configure(awsconfig);
 
-
-Auth.currentAuthenticatedUser()
+getCurrentUser()
   .then(user => {
-
     console.log('User is authenticated:', user);
 
     ReactDOM.createRoot(document.getElementById('root')).render(
@@ -31,8 +29,7 @@ Auth.currentAuthenticatedUser()
           )}
         </Authenticator>
       </React.StrictMode>
-);
-
+    );
   })
   .catch(() => {
     // redirect to login
