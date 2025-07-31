@@ -15,7 +15,7 @@ const Home = () => {
   <h1 className="text-center mb-4 text-forest-green">TripTrek: Where Adventures Begin with a Plan</h1>
 
   <div className="mb-4">
-    <Carousel showThumbs={false} autoPlay={true} infiniteLoop={true} showStatus={false}>
+    <Carousel showThumbs={false} autoPlay={true} infiniteLoop={true} showStatus={false} stopOnHover={false}>
       <div>
         <div style={{ height: '500px' }}>
           <img
