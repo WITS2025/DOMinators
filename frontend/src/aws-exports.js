@@ -6,8 +6,8 @@ const awsmobile = {
   oauth: {
     domain: 'trekatrip.auth.us-east-1.amazoncognito.com',
     scope: ['email', 'openid', 'profile'],
-    redirectSignIn: 'https://main.d2jqd7far0nraw.amplifyapp.com',
-    redirectSignOut: 'https://main.d2jqd7far0nraw.amplifyapp.com',
+    redirectSignIn: 'http://localhost:5173/',
+    redirectSignOut: 'http://localhost:5173/',
     responseType: 'code'
   }
 };
