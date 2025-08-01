@@ -59,6 +59,16 @@ export default function TripDetail() {
       <h2 className="text-center mb-4 text-forest-green">
         {`${trip.destination}`}
       </h2>
+      {trip.imageUrl && (
+        <div className="text-center mb-4">
+          <img
+            src={trip.imageUrl}
+            alt={trip.destination || 'Trip image'}
+            className="img-fluid rounded"
+            style={{ maxHeight: '300px' }}
+          />
+        </div>
+      )}
       <h5 className="text-forest-green mb-3 text-center">
         {trip.startDate} — {trip.endDate}
       </h5>

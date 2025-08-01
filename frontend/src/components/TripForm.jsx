@@ -4,8 +4,11 @@ import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import { format, eachDayOfInterval, parse } from 'date-fns';
+import { useTripContext } from '../context/TripContext';
 
 export default function TripForm({ trip, onSave, onCancel }) {
+  const { uploadTripImage } = useTripContext();
+  const [imageUrl, setImageUrl] = useState(trip.imageUrl || '');
   const [destination, setDestination] = useState(trip.destination || '');
   const [startDate, setStartDate] = useState(trip.startDate || '');
   const [endDate, setEndDate] = useState(trip.endDate || '');
@@ -115,7 +118,8 @@ export default function TripForm({ trip, onSave, onCancel }) {
       destination,
       startDate,
       endDate,
-      itinerary: itineraryToSave
+      itinerary: itineraryToSave,
+      imageUrl
     });
   };
 
@@ -155,6 +159,35 @@ export default function TripForm({ trip, onSave, onCancel }) {
           />
         </div>
       </div>
+
+      <div className="mb-3">
+        <label className="form-label">Trip Photo</label>
+        <input
+          type="file"
+          className="form-control"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const url = await uploadTripImage(
+                file,
+                destination || 'trip',
+                trip?.id || null
+              );
+              setImageUrl(url);
+            }
+          }}
+        />
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt={trip?.destination || 'Trip image'}
+            style={{ maxWidth: '100%', marginTop: 10 }}
+          />
+        )}
+      </div>
+
+      
 
       {itinerary.length > 0 && (
         <div className="mb-3">
