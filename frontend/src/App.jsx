@@ -8,11 +8,8 @@ import About from './pages/About';
 import ContactUs from './pages/ContactUs';
 import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail'; 
-
-import Chatbot from './components/chatbot/Chatbot';
-
 import NavigationBar from './components/NavigationBar';
-
+import Chatbot from './components/chatbot/Chatbot';
 
 function App() {
   return (
