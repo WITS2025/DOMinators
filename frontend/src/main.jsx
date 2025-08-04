@@ -39,7 +39,52 @@ Hub.listen('auth', ({ payload }) => {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Authenticator>
+    <Authenticator
+      // Configure the sign-up form to include all required fields
+      formFields={{
+        signUp: {
+          username: {
+            order: 1,
+            placeholder: 'Enter username',
+            isRequired: true,
+          },
+          preferred_username: {
+            order: 2,
+            placeholder: 'Enter your preferred username',
+            isRequired: true,
+          },
+          email: {
+            order: 3,
+            placeholder: 'name@host.com',
+            isRequired: true,
+          },
+          password: {
+            order: 4,
+            placeholder: 'Enter password',
+            isRequired: true,
+          },
+          confirm_password: {
+            order: 5,
+            placeholder: 'Reenter password',
+            isRequired: true,
+          },
+        },
+      }}
+      // Custom styling to match your theme
+      components={{
+        Header() {
+          return (
+            <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+              <img 
+                src="/src/assets/TripTrekLogo.png" 
+                alt="TripTrek" 
+                style={{ maxHeight: '60px' }}
+              />
+            </div>
+          );
+        },
+      }}
+    >
       {({ signOut, user }) => {
         // Log the entire user object to console
         console.log('Full user object:', user);
