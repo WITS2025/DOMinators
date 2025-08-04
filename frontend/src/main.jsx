@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
+import './auth-styles.css'; // Add this new CSS file
 
 import { Amplify } from 'aws-amplify';
 import { Hub } from 'aws-amplify/utils';
 import awsconfig from './aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { AuthProvider } from './context/AuthContext';
+import logo from './assets/TripTrekLogo.png';
 
 // Dynamically override redirect URLs based on environment
 const isLocal = window.location.hostname === 'localhost';
@@ -40,7 +42,6 @@ Hub.listen('auth', ({ payload }) => {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Authenticator
-      // Configure the sign-up form to include all required fields
       formFields={{
         signUp: {
           username: {
@@ -69,24 +70,26 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             isRequired: true,
           },
         },
+        signIn: {
+          username: {
+            placeholder: 'Enter username',
+          },
+          password: {
+            placeholder: 'Enter password',
+          },
+        },
       }}
-      // Custom styling to match your theme
       components={{
         Header() {
           return (
-            <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <img 
-                src="/src/assets/TripTrekLogo.png" 
-                alt="TripTrek" 
-                style={{ maxHeight: '60px' }}
-              />
+            <div className="auth-header">
+              <img src={logo} alt="TripTrek" className="auth-logo" />
             </div>
           );
         },
       }}
     >
       {({ signOut, user }) => {
-        // Log the entire user object to console
         console.log('Full user object:', user);
         console.log('User object keys:', Object.keys(user));
         console.log('User attributes:', user.attributes);
