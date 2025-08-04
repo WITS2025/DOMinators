@@ -1,5 +1,5 @@
-import { Auth } from 'aws-amplify';
 import { useEffect, useState } from 'react';
+import { Authenticator } from '@aws-amplify/ui-react';
 
 function UserInfo() {
   const [username, setUsername] = useState('');
@@ -13,9 +13,13 @@ function UserInfo() {
   }, []);
 
   return (
-    <div>
-      <h2>Welcome, {username}!</h2>
-    </div>
+    <Authenticator>
+      {({ signOut, user }) => (
+        <div>
+          <h2>Welcome, {user.username}!</h2>
+        </div>
+      )}
+    </Authenticator>
   );
 }
 

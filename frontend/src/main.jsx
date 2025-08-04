@@ -5,33 +5,54 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 
 import { Amplify } from 'aws-amplify';
-import { getCurrentUser } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
+import awsconfig from './aws-exports';
 import { Authenticator } from '@aws-amplify/ui-react';
-import awsconfig from './aws-exports'
+import { AuthProvider } from './context/AuthContext';
 
-Amplify.configure(awsconfig);
+// Dynamically override redirect URLs based on environment
+const isLocal = window.location.hostname === 'localhost';
 
-getCurrentUser()
-  .then(user => {
-    console.log('User is authenticated:', user);
+const updatedConfig = {
+  ...awsconfig,
+  oauth: {
+    ...awsconfig.oauth,
+    redirectSignIn: isLocal
+      ? 'http://localhost:5173/'
+      : 'https://main.d2jqd7far0nraw.amplifyapp.com/',
+    redirectSignOut: isLocal
+      ? 'http://localhost:5173/'
+      : 'https://main.d2jqd7far0nraw.amplifyapp.com/',
+  },
+};
 
-    ReactDOM.createRoot(document.getElementById('root')).render(
-      <React.StrictMode>
-        <Authenticator>
-          {({ signOut, user }) => (
-            <>
-              <App />
-              <div>
-                <h1>Hello, {user.username}</h1>
-                <button onClick={signOut}>Sign Out</button>
-              </div>
-            </>
-          )}
-        </Authenticator>
-      </React.StrictMode>
-    );
-  })
-  .catch(() => {
-    // redirect to login
-    window.location.href = 'https://trekatrip.auth.us-east-1.amazoncognito.com/login?client_id=5u5plsk9gkceno0fefr1dojgsl&redirect_uri=https://main.d2jqd7far0nraw.amplifyapp.com/&response_type=code&scope=email+openid+phone';
-  });
+Amplify.configure(updatedConfig);
+
+// Listen for sign-in events and reload the app
+Hub.listen('auth', ({ payload }) => {
+  const { event } = payload;
+  if (event === 'signIn') {
+    console.log('Sign-in event detected, reloading...');
+    window.location.reload();
+  }
+});
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Authenticator>
+      {({ signOut, user }) => {
+        // Log the entire user object to console
+        console.log('Full user object:', user);
+        console.log('User object keys:', Object.keys(user));
+        console.log('User attributes:', user.attributes);
+        console.log('User signInDetails:', user.signInDetails);
+        
+        return (
+          <AuthProvider user={user} signOut={signOut}>
+            <App />
+          </AuthProvider>
+        );
+      }}
+    </Authenticator>
+  </React.StrictMode>
+);

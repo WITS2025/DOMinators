@@ -3,13 +3,12 @@ import NavigationBar from './components/NavigationBar';
 import Home from './pages/Home';
 import About from './pages/About';
 import ContactUs from './pages/ContactUs';
-//import Trips from './pages/Trips';
-
 import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail'; 
 import { TripProvider } from './context/TripContext'; 
 
 function App() {
+  // No need to pass user props anymore
   return (
     <TripProvider>
       <Router>

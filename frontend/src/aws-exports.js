@@ -5,7 +5,7 @@ const awsmobile = {
   aws_user_pools_web_client_id: '5u5plsk9gkceno0fefr1dojgsl',
   oauth: {
     domain: 'trekatrip.auth.us-east-1.amazoncognito.com',
-    scope: ['email', 'openid', 'phone'],
+    scope: ['email', 'openid', 'profile'],
     redirectSignIn: 'http://localhost:5173/',
     redirectSignOut: 'http://localhost:5173/',
     responseType: 'code'
