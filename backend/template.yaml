@@ -79,8 +79,6 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrekAPI
 
-
-
   getTripList:
     Type: AWS::Serverless::Function
     Properties:
