@@ -217,4 +217,10 @@ describe('TripForm', () => {
 
     expect(mockOnCancel).toHaveBeenCalled();
   });
+
+  test('renders without crashing', () => {
+    const props = { trip: null, onSave: () => {}, onCancel: () => {} };
+    render(<TripForm {...props} />);
+    expect(document.body).toBeInTheDocument();
+  });
 });
