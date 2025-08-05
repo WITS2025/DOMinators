@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import About from './About'; // Adjust the path if needed
@@ -41,5 +42,12 @@ describe('About component', () => {
     expect(
       screen.getByText(/let’s make trip planning part of the fun/i)
     ).toBeInTheDocument();
+  });
+});
+
+describe('About', () => {
+  it('renders without crashing', () => {
+    render(<About />);
+    expect(document.body).toBeInTheDocument();
   });
 });

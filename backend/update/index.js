@@ -6,6 +6,7 @@ import {
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -36,19 +37,23 @@ export const handler = async (event) => {
     };
   }
 
-  const { attributeName, newValue } = requestBody;
+  const { attributeName, newValue, user } = requestBody;
+  const userId = user?.userId;
 
-  if (!attributeName || typeof newValue === 'undefined') {
+  if (!userId || !attributeName || typeof newValue === 'undefined') {
     return {
       statusCode: 400,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Missing 'attributeName' or 'newValue' in body"),
+      body: JSON.stringify("Missing 'userId', 'attributeName', or 'newValue' in body"),
     };
   }
 
   const params = {
     TableName: "TripTrek",
-    Key: { pk: tripId },
+    Key: {
+      pk: userId,
+      sk: tripId,
+    },
     UpdateExpression: "set #attr = :val",
     ExpressionAttributeNames: {
       "#attr": attributeName

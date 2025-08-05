@@ -1,7 +1,15 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 import ContactUs from './ContactUs'; // Adjust the path if needed
+
+describe('ContactUs', () => {
+  test('renders without crashing', () => {
+    render(<ContactUs />);
+    expect(document.body).toBeInTheDocument();
+  });
+});
 
 describe('ContactUs component', () => {
   it('renders the heading and intro text', () => {

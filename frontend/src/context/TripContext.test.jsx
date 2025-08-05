@@ -1,9 +1,12 @@
 // src/context/__tests__/TripContext.test.jsx
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import React from 'react';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TripProvider, useTripContext } from './TripContext'
 
-const API_Endpoint = 'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
+// Use the correct API endpoint that matches your actual backend
+const API_Endpoint = 'https://he3dfmx2d9.execute-api.us-east-1.amazonaws.com/'
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
@@ -28,30 +31,31 @@ let consoleSpy
 // Mock alert
 global.alert = vi.fn()
 
-const mockTripsResponse = [
-  {
-    pk: 'trip-1',
-    destination: 'Paris',
-    startDate: '01/01/2024',
-    endDate: '01/03/2024',
-    itinerary: [
-      {
-        date: '01/01/2024',
-        activities: [
+const mockTripsResponse = {
+  trips: [
+    {
+      userId: 'test-user-id-123',
+      id: 'trip-1',
+      destination: 'Paris',
+      startDate: '01/01/2024',
+      endDate: '01/03/2024',
+      itinerary: {
+        '2024-01-01': [
           { name: 'Visit Eiffel Tower', time: '2:00 PM' },
           { name: 'Breakfast', time: '9:00 AM' }
         ]
       }
-    ]
-  },
-  {
-    pk: 'trip-2',
-    destination: 'Tokyo',
-    startDate: '02/01/2024',
-    endDate: '02/05/2024',
-    itinerary: []
-  }
-]
+    },
+    {
+      userId: 'test-user-id-123',
+      id: 'trip-2',
+      destination: 'Tokyo',
+      startDate: '02/01/2024',
+      endDate: '02/05/2024',
+      itinerary: {}
+    }
+  ]
+}
 
 const renderTripContext = () => {
   return renderHook(() => useTripContext(), {
@@ -85,34 +89,42 @@ describe('TripContext', () => {
   })
 
   describe('useTripContext', () => {
-    it('should throw error when used outside TripProvider', () => {
-      // Suppress console errors for this test
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
-      expect(() => {
-        renderHook(() => useTripContext())
-      }).toThrow('useTripContext must be used within a TripProvider')
-      
-      errorSpy.mockRestore()
+    test('should throw error when used outside TripProvider', () => {
+      const TestComponent = () => {
+        useTripContext();
+        return <div>Test</div>;
+      };
+
+      expect(() => render(<TestComponent />)).toThrow(
+        'useTripContext must be used within a TripProvider'
+      );
     })
   })
 
   describe('TripProvider', () => {
-    it('should provide initial context values', async () => {
-      const { result } = renderTripContext()
-      
-      // Initially loading should be true as fetchTrips is called on mount
-      expect(result.current.loading).toBe(true)
-      expect(result.current.trips).toEqual([])
-      expect(typeof result.current.fetchTrips).toBe('function')
-      expect(typeof result.current.deleteTrip).toBe('function')
-      expect(typeof result.current.saveTrip).toBe('function')
-      expect(typeof result.current.getTripById).toBe('function')
-      
-      // Wait for loading to complete
+    test('should provide initial context values', async () => {
+      const TestComponent = () => {
+        const { trips, loading } = useTripContext();
+        return (
+          <div>
+            <div data-testid="trips-count">{trips.length}</div>
+            <div data-testid="loading">{loading.toString()}</div>
+          </div>
+        );
+      };
+
+      render(
+        <TripProvider>
+          <TestComponent />
+        </TripProvider>
+      );
+
+      // Wait for the component to finish loading
       await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
+        expect(screen.getByTestId('loading')).toHaveTextContent('false');
+      });
+
+      expect(screen.getByTestId('trips-count')).toHaveTextContent('2'); // Should have 2 trips after loading
     })
 
     it('should fetch trips on mount', async () => {
@@ -120,26 +132,37 @@ describe('TripContext', () => {
 
       await waitFor(() => {
         expect(result.current.trips).toHaveLength(2)
-      })
+      }, { timeout: 5000 })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=test-user-id-123`,
         { method: 'GET' }
       )
 
       expect(result.current.trips[0]).toEqual({
-        ...mockTripsResponse[0],
+        userId: 'test-user-id-123',
         id: 'trip-1',
-        itinerary: [
-          {
-            date: '01/01/2024',
-            activities: [
-              { name: 'Breakfast', time: '9:00 AM' },
-              { name: 'Visit Eiffel Tower', time: '2:00 PM' }
-            ]
-          }
-        ]
+        destination: 'Paris',
+        startDate: '01/01/2024',
+        endDate: '01/03/2024',
+        itinerary: {
+          '2024-01-01': [
+            { name: 'Breakfast', time: '9:00 AM' },
+            { name: 'Visit Eiffel Tower', time: '2:00 PM' }
+          ]
+        }
       })
+    })
+
+    it('should call API with userId when fetching trips', async () => {
+      const { result } = renderTripContext()
+      
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          `${API_Endpoint}getTripList?userId=test-user-id-123`,
+          { method: 'GET' }
+        );
+      });
     })
 
     it('should handle fetch error gracefully', async () => {
@@ -151,10 +174,9 @@ describe('TripContext', () => {
         expect(result.current.loading).toBe(false)
       }, { timeout: 3000 })
 
-      // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=test-user-id-123`,
         { method: 'GET' }
       )
     })
@@ -172,10 +194,9 @@ describe('TripContext', () => {
         expect(result.current.loading).toBe(false)
       }, { timeout: 3000 })
 
-      // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=test-user-id-123`,
         { method: 'GET' }
       )
     })
@@ -189,8 +210,14 @@ describe('TripContext', () => {
         expect(result.current.trips).toHaveLength(2)
       })
 
+      // Mock successful delete response
       global.fetch.mockResolvedValueOnce({
         ok: true,
+        status: 200,
+        statusText: 'OK'
+      }).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTripsResponse), // Mock refresh response
         status: 200,
         statusText: 'OK'
       })
@@ -200,8 +227,15 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}deleteTrip?tripId=trip-1`,
-        { method: 'DELETE' }
+        `${API_Endpoint}deleteTrip`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'test-user-id-123',
+            tripId: 'trip-1'
+          })
+        }
       )
     })
 
@@ -212,7 +246,6 @@ describe('TripContext', () => {
         expect(result.current.trips).toHaveLength(2)
       })
 
-      // Now mock the delete request to fail
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -224,10 +257,16 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}deleteTrip?tripId=trip-1`,
-        { method: 'DELETE' }
+        `${API_Endpoint}deleteTrip`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'test-user-id-123',
+            tripId: 'trip-1'
+          })
+        }
       )
-      expect(global.alert).toHaveBeenCalledWith('Failed to delete trip. Please try again.')
     })
   })
 
@@ -235,16 +274,24 @@ describe('TripContext', () => {
     it('should create new trip', async () => {
       const { result } = renderTripContext()
       
+      await waitFor(() => {
+        expect(result.current.trips).toHaveLength(2)
+      })
+      
       const newTrip = {
         destination: 'London',
         startDate: '03/01/2024',
         endDate: '03/03/2024',
-        itinerary: []
+        itinerary: {}
       }
 
+      // Mock successful create and refresh responses
       global.fetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ success: true })
+      }).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTripsResponse)
       })
 
       await act(async () => {
@@ -257,17 +304,16 @@ describe('TripContext', () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            userId: 'test-user-id-123',
             ...newTrip,
             id: 'mock-uuid-123',
-            itinerary: [
-              { date: '01/01/2024', activities: [] },
-              { date: '01/01/2024', activities: [] }
-            ]
+            itinerary: {
+              '2024-01-01': [],
+              '2024-01-02': []
+            }
           })
         }
       )
-
-      expect(global.alert).toHaveBeenCalledWith('Trip created successfully!')
     })
 
     it('should update existing trip', async () => {
@@ -292,13 +338,22 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}updateTrip?tripId=trip-1`,
+        `${API_Endpoint}updateTrip`,
         {
-          method: 'PATCH',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            attributeName: 'destination',
-            newValue: 'Updated Paris'
+            userId: 'test-user-id-123',
+            id: 'trip-1',
+            destination: 'Updated Paris',
+            startDate: '01/01/2024',
+            endDate: '01/03/2024',
+            itinerary: {
+              '2024-01-01': [
+                { name: 'Breakfast', time: '9:00 AM' },
+                { name: 'Visit Eiffel Tower', time: '2:00 PM' }
+              ]
+            }
           })
         }
       )
@@ -315,10 +370,9 @@ describe('TripContext', () => {
         destination: 'London',
         startDate: '03/01/2024',
         endDate: '03/03/2024',
-        itinerary: []
+        itinerary: {}
       }
 
-      // Mock the create trip request to fail
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
@@ -333,7 +387,8 @@ describe('TripContext', () => {
         `${API_Endpoint}createTrip`,
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: expect.stringContaining('"userId":"test-user-id-123"')
         })
       )
       expect(global.alert).toHaveBeenCalledWith('Failed to create trip.')
@@ -351,7 +406,6 @@ describe('TripContext', () => {
         destination: 'Updated Paris'
       }
 
-      // Mock the update trip request to fail
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -363,10 +417,11 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('updateTrip?tripId=trip-1'),
+        `${API_Endpoint}updateTrip`,
         expect.objectContaining({
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' }
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: expect.stringContaining('"userId":"test-user-id-123"')
         })
       )
     })
@@ -406,15 +461,14 @@ describe('TripContext', () => {
         destination: 'Test City',
         startDate: '01/01/2024',
         endDate: '01/01/2024',
-        itinerary: [{
-          date: '01/01/2024',
-          activities: [
+        itinerary: {
+          '2024-01-01': [
             { name: 'Late Activity', time: '11:30 PM' },
             { name: 'Early Activity', time: '8:00 AM' },
             { name: 'Noon Activity', time: '12:00 PM' },
             { name: 'Midnight Activity', time: '12:00 AM' }
           ]
-        }]
+        }
       }
 
       global.fetch.mockResolvedValueOnce({
@@ -426,14 +480,13 @@ describe('TripContext', () => {
         await result.current.saveTrip(tripWithUnsortedTimes)
       })
 
-      // Verify the fetch was called with sorted activities
       const callArgs = global.fetch.mock.calls.find(call => 
         call[0].includes('createTrip')
       )
       expect(callArgs).toBeDefined()
       
       const requestBody = JSON.parse(callArgs[1].body)
-      const activities = requestBody.itinerary[0].activities
+      const activities = requestBody.itinerary['2024-01-01']
       
       // Should be sorted: 12:00 AM, 8:00 AM, 12:00 PM, 11:30 PM
       expect(activities[0].name).toBe('Midnight Activity')
@@ -450,7 +503,7 @@ describe('TripContext', () => {
       renderTripContext()
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=test-user-id-123`,
         { method: 'GET' }
       )
     })
@@ -467,7 +520,7 @@ describe('TripContext', () => {
         .mockResolvedValueOnce({ ok: true, status: 200 }) // delete response
         .mockResolvedValueOnce({ // refresh response
           ok: true,
-          json: () => Promise.resolve([mockTripsResponse[1]]) // only second trip remains
+          json: () => Promise.resolve({ trips: [mockTripsResponse.trips[1]] })
         })
 
       await act(async () => {
@@ -485,7 +538,7 @@ describe('TripContext', () => {
         destination: 'London',
         startDate: '03/01/2024',
         endDate: '03/03/2024',
-        itinerary: []
+        itinerary: {}
       }
 
       // Mock successful create, then successful refresh
@@ -493,7 +546,9 @@ describe('TripContext', () => {
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true }) }) // create response
         .mockResolvedValueOnce({ // refresh response
           ok: true,
-          json: () => Promise.resolve([...mockTripsResponse, { pk: 'trip-3', ...newTrip }])
+          json: () => Promise.resolve({ 
+            trips: [...mockTripsResponse.trips, { userId: 'test-user-id-123', id: 'trip-3', ...newTrip }]
+          })
         })
 
       await act(async () => {

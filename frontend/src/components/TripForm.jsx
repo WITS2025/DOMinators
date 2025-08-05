@@ -1,11 +1,14 @@
 // src/components/TripForm.jsx
+
 import { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import { format, eachDayOfInterval, parse } from 'date-fns';
+import { useAuth } from '../context/AuthContext';
 
 export default function TripForm({ trip, onSave, onCancel }) {
+  // Initialize state with trip data or defaults
   const [destination, setDestination] = useState(trip.destination || '');
   const [startDate, setStartDate] = useState(trip.startDate || '');
   const [endDate, setEndDate] = useState(trip.endDate || '');
@@ -14,14 +17,16 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
+  const { user } = useAuth();
+
+  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input fields)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
+  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input fields)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -30,6 +35,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
 
   const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date());
 
+  // Automatically generate itinerary days based on start and end dates
   useEffect(() => {
     if (startDate && endDate) {
       const start = parseMDY(startDate);
@@ -37,6 +43,8 @@ export default function TripForm({ trip, onSave, onCancel }) {
 
       if (end >= start) {
         const days = eachDayOfInterval({ start, end });
+
+        // Preserve existing activities for matching dates
         setItinerary(prev => {
           const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
           return days.map(date => {
@@ -52,6 +60,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
   }, [startDate, endDate]);
 
+  // Add a new activity to a specific day in the itinerary
   const handleAddActivity = (date) => {
     const time = newActivityTime[date];
     const name = newActivityName[date];
@@ -78,10 +87,12 @@ export default function TripForm({ trip, onSave, onCancel }) {
       })
     );
 
+    // Clear input fields after adding
     setNewActivityTime({ ...newActivityTime, [date]: '' });
     setNewActivityName({ ...newActivityName, [date]: '' });
   };
 
+  // Format time to 12-hour format with AM/PM
   const formatTime12Hour = (timeStr) => {
     const [hour, minute] = timeStr.split(':');
     const h = parseInt(hour, 10);
@@ -90,6 +101,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
     return `${displayHour}:${minute} ${suffix}`;
   };
 
+  // Remove an activity from a specific day
   const handleRemoveActivity = (date, index) => {
     setItinerary(prev =>
       prev.map(day =>
@@ -100,30 +112,40 @@ export default function TripForm({ trip, onSave, onCancel }) {
     );
   };
 
+  // Submit the form to create or update a trip
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!destination || !startDate || !endDate) {
-      setError('Please fill in all fields.');
-      return;
+  e.preventDefault();
+
+  if (!destination || !startDate || !endDate) {
+    setError('Please fill in all fields.');
+    return;
+  }
+
+  const itineraryToSave = itinerary.map(day => ({
+    date: day.date,
+    activities: [...day.activities]
+  }));
+
+  // Include userId in the trip object for DynamoDB pk
+  onSave({
+    ...trip,
+    destination,
+    startDate,
+    endDate,
+    itinerary: itineraryToSave,
+    user: {
+      userId: user?.userId
     }
-    const itineraryToSave = itinerary.map(day => ({
-      date: day.date,
-      activities: [...day.activities]
-    }));
-    onSave({
-      ...trip,
-      destination,
-      startDate,
-      endDate,
-      itinerary: itineraryToSave
-    });
-  };
+  });
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="bg-white-custom p-4 rounded shadow-sm mb-4 d-flex flex-column">
       <h4 className="text-forest-green mb-3">Add / Edit Trip</h4>
       {error && <div className="alert alert-danger">{error}</div>}
 
+      {/* Destination input */}
       <div className="mb-3">
         <label className="form-label">Destination</label>
         <input
@@ -134,6 +156,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
         />
       </div>
 
+      {/* Start and End Date inputs */}
       <div className="row mb-3">
         <div className="col-md-6">
           <label className="form-label">Start Date</label>
@@ -156,6 +179,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* Itinerary section */}
       {itinerary.length > 0 && (
         <div className="mb-3">
           <label className="form-label">Itinerary</label>
@@ -166,6 +190,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
                 {day.activities.map((activity, j) => (
                   <li key={j}>
                     {activity.time} — {activity.name}
+                    {/* Delete activity */}
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger ms-2"
@@ -176,6 +201,8 @@ export default function TripForm({ trip, onSave, onCancel }) {
                   </li>
                 ))}
               </ul>
+
+              {/* Add new activity */}
               <div className="d-flex flex-wrap gap-2 mt-2">
                 <TimePicker
                   disableClock={true}
@@ -204,6 +231,7 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       )}
 
+      {/* Save or Cancel buttons */}
       <div className="mt-3 d-flex justify-content-center">
         <button type="submit" className="btn btn-terra me-2">Save</button>
         <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>

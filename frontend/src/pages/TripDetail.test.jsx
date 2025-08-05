@@ -231,4 +231,9 @@ describe('TripDetail', () => {
       expect(screen.getByText('Paris')).toBeInTheDocument() // Header shows destination
     })
   })
+
+  test('renders without crashing', () => {
+    render(<TripDetail />)
+    expect(document.body).toBeInTheDocument()
+  })
 })
