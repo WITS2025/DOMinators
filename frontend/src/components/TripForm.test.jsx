@@ -18,7 +18,8 @@ vi.mock('react-time-picker', () => ({
 }));
 
 const mockTrip = {
-  id: '1',
+  userId: 'test-user-id-123', // Add userId (PK)
+  id: 'test-trip-id',         // Keep id as SK
   destination: 'Test Destination',
   startDate: '01/01/2024',
   endDate: '01/05/2024',
