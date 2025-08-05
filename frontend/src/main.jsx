@@ -34,7 +34,6 @@ Amplify.configure(updatedConfig);
 Hub.listen('auth', ({ payload }) => {
   const { event } = payload;
   if (event === 'signIn') {
-    console.log('Sign-in event detected, reloading...');
     window.location.reload();
   }
 });
@@ -90,10 +89,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       }}
     >
       {({ signOut, user }) => {
-        console.log('Full user object:', user);
-        console.log('User object keys:', Object.keys(user));
-        console.log('User attributes:', user.attributes);
-        console.log('User signInDetails:', user.signInDetails);
         
         return (
           <AuthProvider user={user} signOut={signOut}>
