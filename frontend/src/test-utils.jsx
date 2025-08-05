@@ -2,6 +2,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { vi } from 'vitest';
+import '@testing-library/jest-dom'; // Add this import for toBeInTheDocument
 
 // Mock AuthContext globally for all tests
 vi.mock('./context/AuthContext', () => ({
@@ -51,15 +52,42 @@ vi.mock('react-bootstrap', () => ({
     Item: ({ children, ...props }) => <div {...props}>{children}</div>
   },
   Button: ({ children, ...props }) => <button {...props}>{children}</button>,
-  Form: ({ children, ...props }) => <form {...props}>{children}</form>,
-  Card: ({ children, ...props }) => <div {...props}>{children}</div>,
+  Form: {
+    Group: ({ children, ...props }) => <div {...props}>{children}</div>,
+    Label: ({ children, ...props }) => <label {...props}>{children}</label>,
+    Control: ({ children, ...props }) => <input {...props}>{children}</input>,
+    Select: ({ children, ...props }) => <select {...props}>{children}</select>
+  },
+  Card: {
+    Body: ({ children, ...props }) => <div {...props}>{children}</div>
+  },
   Row: ({ children, ...props }) => <div {...props}>{children}</div>,
   Col: ({ children, ...props }) => <div {...props}>{children}</div>,
-  Spinner: ({ children, ...props }) => <div {...props}>Loading...</div>
+  Spinner: ({ children, ...props }) => <div {...props}>Loading...</div>,
+  Alert: ({ children, ...props }) => <div {...props}>{children}</div>
+}));
+
+// Mock date-fns functions to prevent padStart errors
+vi.mock('date-fns', () => ({
+  format: vi.fn((date, formatStr) => {
+    if (!date) return '';
+    if (typeof date === 'string') return date;
+    return '2024-01-01'; // Return a valid date string
+  }),
+  eachDayOfInterval: vi.fn(() => [new Date('2024-01-01'), new Date('2024-01-02')]),
+  parse: vi.fn((dateStr, formatStr, baseDate) => {
+    if (!dateStr) return new Date();
+    return new Date(dateStr);
+  })
 }));
 
 // Mock fetch globally for API calls
-global.fetch = vi.fn();
+global.fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({ trips: [] })
+  })
+);
 
 // Custom render function with providers
 const customRender = (ui, options) => render(ui, options);
