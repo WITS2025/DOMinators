@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from 'react';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -17,8 +18,8 @@ beforeEach(() => {
         json: async () => ({
           trips: [
             {
-              userId: 'test-user-id-123', // PK
-              id: 'test-trip-id',         // SK
+              userId: 'test-user-id-123',
+              id: 'test-trip-id', // This matches the useParams mock
               destination: 'Test Destination',
               startDate: '01/01/2024',
               endDate: '01/05/2024',
@@ -87,11 +88,50 @@ beforeEach(() => {
   });
 });
 
+// Mock TripContext globally with proper data
+vi.mock('./context/TripContext', () => {
+  const mockTripData = {
+    userId: 'test-user-id-123',
+    id: 'test-trip-id',
+    destination: 'Test Destination',
+    startDate: '01/01/2024',
+    endDate: '01/05/2024',
+    itinerary: {
+      '2024-01-01': [
+        {
+          id: 'activity-1',
+          time: '09:00 AM',
+          name: 'Test Activity',
+          description: 'Test Description'
+        }
+      ]
+    }
+  };
+
+  return {
+    useTripContext: () => ({
+      trips: [mockTripData],
+      loading: false,
+      fetchTrips: vi.fn(),
+      saveTrip: vi.fn(),
+      deleteTrip: vi.fn(),
+      getTripById: vi.fn((id) => {
+        console.log('getTripById called with:', id);
+        if (id === 'test-trip-id') {
+          return mockTripData;
+        }
+        return undefined;
+      })
+    }),
+    TripProvider: ({ children }) => <div data-testid="trip-provider">{children}</div>
+  };
+});
+
 // Mock AuthContext globally
 vi.mock('./context/AuthContext', () => ({
   useAuth: () => ({
     user: {
-      userId: 'test-user-id-123', // Make sure this matches your PK
+      userId: 'test-user-id-123',
       username: 'testuser',
       signInDetails: { loginId: 'testuser' },
       attributes: {
@@ -108,7 +148,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useParams: () => ({ id: 'test-trip-id' }),
+    useParams: () => ({ id: 'test-trip-id' }), // Make sure this matches the trip ID in mock data
     useNavigate: () => vi.fn(),
     useLocation: () => ({ pathname: '/test' }),
     BrowserRouter: ({ children }) => <div data-testid="router">{children}</div>,

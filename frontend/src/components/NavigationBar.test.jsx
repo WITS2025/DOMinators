@@ -1,13 +1,15 @@
 import React from 'react';
-import { render, screen } from '../test-utils'; // Use our custom test utils
-import { describe, test, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, test, expect } from 'vitest';
 import NavigationBar from './NavigationBar';
 
+// No additional mocks needed - using global ones from setupTests.jsx
+
 describe('NavigationBar', () => {
-  test('renders logo image with alt text', () => {
+  test('renders without crashing', () => {
     render(<NavigationBar />);
-    const logo = screen.getByAltText(/TripTrek/i);
-    expect(logo).toBeInTheDocument();
+    // Test basic functionality
+    expect(screen.getByText(/Home/i)).toBeInTheDocument();
   });
 
   test('renders navigation links', () => {
@@ -19,10 +21,9 @@ describe('NavigationBar', () => {
     expect(screen.getByText(/Contact Us/i)).toBeInTheDocument();
   });
 
-  test('renders navigation bar', () => {
+  test('renders logo image with alt text', () => {
     render(<NavigationBar />);
-    
-    // Should render without throwing errors
-    expect(screen.getByText(/Home/i)).toBeInTheDocument();
+    const logo = screen.getByAltText(/TripTrek/i);
+    expect(logo).toBeInTheDocument();
   });
 });

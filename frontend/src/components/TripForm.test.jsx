@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../test-utils';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import TripForm from './TripForm';
-import { describe, test, expect, vi } from 'vitest';
 
 // Mock react-time-picker
 vi.mock('react-time-picker', () => ({
@@ -17,9 +17,11 @@ vi.mock('react-time-picker', () => ({
   ),
 }));
 
+// Remove any local TripContext mocks - using global ones from setupTests.jsx
+
 const mockTrip = {
-  userId: 'test-user-id-123', // Add userId (PK)
-  id: 'test-trip-id',         // Keep id as SK
+  userId: 'test-user-id-123',
+  id: 'test-trip-id',
   destination: 'Test Destination',
   startDate: '01/01/2024',
   endDate: '01/05/2024',
@@ -35,41 +37,34 @@ const mockTrip = {
   }
 };
 
+const defaultProps = {
+  trip: null,
+  onSave: vi.fn(),
+  onCancel: vi.fn()
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe('TripForm', () => {
   test('renders with pre-filled trip data', () => {
-    const mockOnSave = vi.fn();
-    const mockOnCancel = vi.fn();
-
     render(
       <TripForm 
-        trip={mockTrip} 
-        onSave={mockOnSave} 
-        onCancel={mockOnCancel} 
+        {...defaultProps}
+        trip={mockTrip}
       />
     );
 
-    // Check if destination input has the value
-    const destinationInput = screen.getByDisplayValue('Test Destination');
-    expect(destinationInput).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Test Destination')).toBeInTheDocument();
   });
 
   test('displays error on submit when required fields are missing', async () => {
-    const mockOnSave = vi.fn();
-    const mockOnCancel = vi.fn();
+    render(<TripForm {...defaultProps} />);
 
-    render(
-      <TripForm 
-        trip={null} 
-        onSave={mockOnSave} 
-        onCancel={mockOnCancel} 
-      />
-    );
-
-    // Try to submit without filling required fields
-    const submitButton = screen.getByText(/Save Trip/i);
+    const submitButton = screen.getByRole('button', { name: /save trip/i });
     fireEvent.click(submitButton);
 
-    // Should show error message
     await waitFor(() => {
       expect(screen.getByText(/Please fill in all required fields/i)).toBeInTheDocument();
     });
