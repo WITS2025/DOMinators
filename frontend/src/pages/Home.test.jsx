@@ -59,4 +59,9 @@ describe('Home component', () => {
     expect(screen.getAllByText(/Because the Best Trips Start with a Plan/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/No More Guesswork – Just Great Adventures/i)).toBeInTheDocument();
   });
+
+  test('renders without crashing', () => {
+    render(<Home />);
+    expect(document.body).toBeInTheDocument();
+  });
 });
