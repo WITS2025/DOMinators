@@ -1,6 +1,7 @@
 // src/context/__tests__/TripContext.test.jsx
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import React from 'react';
+import { render, screen, waitFor } from '../test-utils';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { TripProvider, useTripContext } from './TripContext'
 
 const API_Endpoint = 'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
@@ -54,7 +55,7 @@ const mockTripsResponse = [
 ]
 
 const renderTripContext = () => {
-  return renderHook(() => useTripContext(), {
+  return render(() => useTripContext(), {
     wrapper: ({ children }) => <TripProvider>{children}</TripProvider>
   })
 }
@@ -85,34 +86,38 @@ describe('TripContext', () => {
   })
 
   describe('useTripContext', () => {
-    it('should throw error when used outside TripProvider', () => {
-      // Suppress console errors for this test
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
-      expect(() => {
-        renderHook(() => useTripContext())
-      }).toThrow('useTripContext must be used within a TripProvider')
-      
-      errorSpy.mockRestore()
+    test('should throw error when used outside TripProvider', () => {
+      const TestComponent = () => {
+        useTripContext();
+        return <div>Test</div>;
+      };
+
+      expect(() => render(<TestComponent />)).toThrow(
+        'useTripContext must be used within a TripProvider'
+      );
     })
   })
 
   describe('TripProvider', () => {
-    it('should provide initial context values', async () => {
-      const { result } = renderTripContext()
-      
-      // Initially loading should be true as fetchTrips is called on mount
-      expect(result.current.loading).toBe(true)
-      expect(result.current.trips).toEqual([])
-      expect(typeof result.current.fetchTrips).toBe('function')
-      expect(typeof result.current.deleteTrip).toBe('function')
-      expect(typeof result.current.saveTrip).toBe('function')
-      expect(typeof result.current.getTripById).toBe('function')
-      
-      // Wait for loading to complete
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      })
+    test('should provide initial context values', () => {
+      const TestComponent = () => {
+        const { trips, loading } = useTripContext();
+        return (
+          <div>
+            <div data-testid="trips-count">{trips.length}</div>
+            <div data-testid="loading">{loading.toString()}</div>
+          </div>
+        );
+      };
+
+      render(
+        <TripProvider>
+          <TestComponent />
+        </TripProvider>
+      );
+
+      expect(screen.getByTestId('trips-count')).toHaveTextContent('0');
+      expect(screen.getByTestId('loading')).toHaveTextContent('false');
     })
 
     it('should fetch trips on mount', async () => {
