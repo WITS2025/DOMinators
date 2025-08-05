@@ -1,15 +1,15 @@
-
-import '@testing-library/jest-dom'
-
-// Mock fetch globally for all tests
-import { vi } from 'vitest'
-
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve([]),
-  })
-)
-
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+// Mock fetch globally
+global.fetch = vi.fn();
+
+// Setup default fetch responses
+beforeEach(() => {
+  fetch.mockClear();
+  fetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ trips: [] }),
+  });
+});
 
