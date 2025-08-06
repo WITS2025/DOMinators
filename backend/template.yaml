@@ -7,6 +7,7 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -39,7 +40,7 @@ Resources:
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -57,7 +58,7 @@ Resources:
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -75,7 +76,7 @@ Resources:
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -93,35 +94,13 @@ Resources:
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
           Properties:
             Path: /deleteTrip
             Method: DELETE
-            ApiId: !Ref TripTrekAPI
-
-  saveImageMetadata:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: saveImageMetadata
-      Handler: saveImageMetadata.handler
-      Runtime: nodejs22.x
-      CodeUri: saveImageMetadata/
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref TripTrekTable
-          AWS_REGION: !Ref AWS::Region
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
-      Events:
-        ApiForMyApp:
-          Type: HttpApi
-          Properties:
-            Path: /saveImageMetadata
-            Method: POST
             ApiId: !Ref TripTrekAPI
 
 Outputs:
