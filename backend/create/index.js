@@ -26,7 +26,7 @@ export const handler = async (event) => {
   }
  
   // Extract values from DynamoDB format
-  const { destination, startDate, endDate } = body;
+  const { destination, startDate, endDate, imageUrl } = body;
 
   const tripID = body.id; // frontend sends "id" not "tripID"
 
@@ -136,8 +136,8 @@ export const handler = async (event) => {
     destination,
     startDate,
     endDate,
-    created_at: new Date().toISOString(),
     itinerary,
+    ...(imageUrl && { imageUrl }),
   };
  
   const params = {

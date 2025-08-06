@@ -122,23 +122,34 @@ export default function TripList() {
                         }
                       }}
                     >
-                      <div className="flex-grow-1 text-center">
-                        <strong>{trip.destination}</strong> <br />
-                        <small className="text-muted">
-                          {trip.startDate} to {trip.endDate}
-                        </small>
+                      <div className="d-flex align-items-center">
+                        {trip.imageUrl && (
+                          <img
+                            src={trip.imageUrl}
+                            alt={trip.destination}
+                            className="img-thumbnail me-3"
+                            width="80"
+                            height="80"
+                          />
+                        )}
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1">{trip.destination}</h6>
+                          <p className="mb-0 text-muted">
+                            {trip.startDate} to {trip.endDate}
+                          </p>
+                        </div>
+                        <button
+                          className="btn btn-sm btn-outline-danger ms-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(trip.id);
+                          }}
+                          disabled={isLoading}
+                          aria-label={`Delete trip to ${trip.destination}`}
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(trip.id)
-                        }}
-                        disabled={isLoading}
-                        aria-label={`Delete trip to ${trip.destination}`}
-                      >
-                        Delete
-                      </button>
                     </div>
                   ))}
                 </div>

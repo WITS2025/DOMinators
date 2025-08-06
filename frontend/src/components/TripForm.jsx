@@ -4,8 +4,12 @@ import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import { format, eachDayOfInterval, parse } from 'date-fns';
+import { useTripContext } from '../context/TripContext';
+import imageCompression from 'browser-image-compression'; // NEW
 
 export default function TripForm({ trip, onSave, onCancel }) {
+  const { uploadTripImage } = useTripContext();
+  const [imageUrl, setImageUrl] = useState(trip.imageUrl || '');
   const [destination, setDestination] = useState(trip.destination || '');
   const [startDate, setStartDate] = useState(trip.startDate || '');
   const [endDate, setEndDate] = useState(trip.endDate || '');
@@ -13,15 +17,14 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityTime, setNewActivityTime] = useState({});
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null); // NEW
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
 
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -100,22 +103,35 @@ export default function TripForm({ trip, onSave, onCancel }) {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!destination || !startDate || !endDate) {
       setError('Please fill in all fields.');
       return;
     }
+
+    let finalImageUrl = imageUrl;
+
+    if (selectedImageFile) {
+      finalImageUrl = await uploadTripImage(
+        selectedImageFile,
+        destination || 'trip',
+        trip?.id || null
+      );
+    }
+
     const itineraryToSave = itinerary.map(day => ({
       date: day.date,
       activities: [...day.activities]
     }));
+
     onSave({
       ...trip,
       destination,
       startDate,
       endDate,
-      itinerary: itineraryToSave
+      itinerary: itineraryToSave,
+      imageUrl: finalImageUrl
     });
   };
 
@@ -154,6 +170,43 @@ export default function TripForm({ trip, onSave, onCancel }) {
             onChange={(e) => setEndDate(fromInputDate(e.target.value))}
           />
         </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="form-label">Trip Photo</label>
+        <input
+          type="file"
+          className="form-control"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              try {
+                const options = {
+                  maxSizeMB: 0.5,
+                  maxWidthOrHeight: 1024,
+                  useWebWorker: true,
+                };
+                const compressedFile = await imageCompression(file, options);
+                setSelectedImageFile(compressedFile);
+                setImageUrl(URL.createObjectURL(compressedFile));
+              } catch (err) {
+                console.error('Image compression failed:', err);
+                setSelectedImageFile(file);
+                setImageUrl(URL.createObjectURL(file));
+              }
+            }
+          }}
+        />
+        {imageUrl && (
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt={trip?.destination || 'Trip image'}
+            style={{ maxWidth: '100%', marginTop: 10 }}
+            onError={() => console.error('Image failed to load:', imageUrl)}
+          />
+        )}
       </div>
 
       {itinerary.length > 0 && (
