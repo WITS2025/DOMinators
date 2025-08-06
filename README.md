@@ -66,9 +66,33 @@ This project uses React with Vite for a fast and modern frontend development exp
    
    Update frontend/context/TripContext.jsx line 17 and frontend/context/TripContext.test.jsx line 6
    
-   Set the API base URL to the deployed API Gateway URL from the SAM deploy output.
+   Set the API base URL to the deployed API Gateway URL from the SAM deploy output. Make sure to include the trailing slash.
    ```bash
    const API_Endpoint =  'https://your-api-endpoint.amazonaws.com/'
    ```
+
+### Using the AI Travel Assistant (OpenAI API Key)
+
+To enable the built-in AI features:
+
+1. [Create an OpenAI API key](https://platform.openai.com/account/api-keys).
+2. In the `frontend` folder, create a `.env` file:
+   ```env
+   VITE_OPENAI_API_KEY=your-api-key-here
+3. Upload the fine-tuning files via CLI:
+   ```
+   openai api files upload --file training.jsonl --purpose fine-tune
+   openai api files upload --file validation.jsonl --purpose fine-tune
+4. Create the fine-tuned model:
+   ```
+   openai api fine_tunes.create \
+      -t file-xxxxxxxxxxxxxxxxxxx \
+      -v file-yyyyyyyyyyyyyyyyyyy \
+      -m gpt-3.5-turbo
+5. Replace the fine-tuned model ID in the Chatbox component line 8
+   ```
+   const FINETUNED_MODEL_ID = "ft:your-finetuned-model-id-here";
+   ```
+
 ## 📌 **Why TripTrek?**
 ### Because life is better when it's organized. Whether you're a meticulous planner or a spontaneous adventurer, **TripTrek** gives you the flexibility to build and adjust your itinerary on the fly.

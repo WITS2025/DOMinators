@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 // Import your page components
@@ -7,10 +9,11 @@ import ContactUs from './pages/ContactUs';
 import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail'; 
 import NavigationBar from './components/NavigationBar';
-
+import Chatbot from './components/chatbot/Chatbot';
 
 function App() {
   return (
+
     <Router>
       <div>
         <NavigationBar />
@@ -25,7 +28,9 @@ function App() {
         
         </Routes>
       </div>
+      <Chatbot />
     </Router>
+
   );
 }
 

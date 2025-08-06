@@ -21,6 +21,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env file for frontend
+        run: echo "VITE_OPENAI_API_KEY=${{ secrets.VITE_OPENAI_API_KEY }}" > .env
+
       - name: Clean and install dependencies
         run: |
           rm -rf node_modules package-lock.json
