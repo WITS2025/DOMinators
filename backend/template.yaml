@@ -155,4 +155,5 @@ Outputs:
     Description: "HTTP API endpoint base URL"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
   LocationImagesBucketName:
+    Description: "S3 Image Bucket Name"
     Value: !Ref LocationImagesBucket
