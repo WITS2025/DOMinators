@@ -136,6 +136,7 @@ export const TripProvider = ({ children }) => {
       if (existingTrip) {
         if (existingTrip.destination !== trip.destination) {
           await updateTripAPI(trip.id, 'destination', finalTrip.destination)
+          await updateTripAPI(trip.id, 'mapData', null) // reset mapData so it won't show old destination
         }
 
         if (existingTrip.startDate !== trip.startDate) {
@@ -144,6 +145,10 @@ export const TripProvider = ({ children }) => {
 
         if (existingTrip.endDate !== trip.endDate) {
           await updateTripAPI(trip.id, 'endDate', trip.endDate)
+        }
+
+        if (existingTrip.mapData !== trip.mapData) {
+          await updateTripAPI(trip.id, 'mapData', trip.mapData)
         }
 
         if (
