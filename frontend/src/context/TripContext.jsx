@@ -14,7 +14,7 @@ export const useTripContext = () => {
 };
 
 export const TripProvider = ({ children }) => {
-  const API_Endpoint = 'https://4il2al2pzf.execute-api.us-east-1.amazonaws.com/';
+  const API_Endpoint = 'https://hcfttejtr8.execute-api.us-east-1.amazonaws.com/';
   const { user } = useAuth(); // get userId from AuthContext
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -83,24 +83,29 @@ export const TripProvider = ({ children }) => {
 
   // UPDATE a trip attribute
   const updateTripAPI = async (tripId, attributeName, newValue) => {
-    try {
-      const res = await fetch(`${API_Endpoint}updateTrip?userId=${user.userId}&tripId=${encodeURIComponent(tripId)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ attributeName, newValue })
-      });
+  try {
+    const res = await fetch(`${API_Endpoint}updateTrip?tripId=${encodeURIComponent(tripId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        attributeName,
+        newValue,
+        user: { userId: user.userId } // ✅ include user object
+      })
+    });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`API error: ${res.status} ${errText}`);
-      }
-
-      const result = await res.json();
-      return result;
-    } catch (err) {
-      console.error('API call failed:', err);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`API error: ${res.status} ${errText}`);
     }
-  };
+
+    const result = await res.json();
+    return result;
+  } catch (err) {
+    console.error('API call failed:', err);
+  }
+};
+
 
   // CREATE or UPDATE a trip
   const saveTrip = async (trip) => {

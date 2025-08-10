@@ -1,5 +1,3 @@
-// src/components/TripForm.jsx
-
 import { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';

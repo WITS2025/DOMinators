@@ -12,23 +12,7 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { AuthProvider } from './context/AuthContext';
 import logo from './assets/TripTrekLogo.png';
 
-// Dynamically override redirect URLs based on environment
-const isLocal = window.location.hostname === 'localhost';
-
-const updatedConfig = {
-  ...awsconfig,
-  oauth: {
-    ...awsconfig.oauth,
-    redirectSignIn: isLocal
-      ? 'http://localhost:5173/'
-      : 'https://main.d2jqd7far0nraw.amplifyapp.com/',
-    redirectSignOut: isLocal
-      ? 'http://localhost:5173/'
-      : 'https://main.d2jqd7far0nraw.amplifyapp.com/',
-  },
-};
-
-Amplify.configure(updatedConfig);
+Amplify.configure(awsconfig);
 
 // Listen for sign-in events and reload the app
 Hub.listen('auth', ({ payload }) => {
@@ -90,11 +74,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       }}
     >
       {({ signOut, user }) => {
-        console.log('Full user object:', user);
-        console.log('User object keys:', Object.keys(user));
-        console.log('User attributes:', user.attributes);
-        console.log('User signInDetails:', user.signInDetails);
-        
         return (
           <AuthProvider user={user} signOut={signOut}>
             <App />
