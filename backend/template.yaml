@@ -136,21 +136,6 @@ Resources:
             Method: DELETE
             ApiId: !Ref TripTrekAPI
 
-<<<<<<< HEAD
-  imageUploader:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: imageUploader
-      Handler: index.handler
-      Runtime: nodejs22.x
-      CodeUri: images/
-      Environment:
-        Variables:
-          LOCATION_IMAGES_BUCKET: !Ref ImageUploadBucket
-      Policies:
-        - S3WritePolicy:
-            BucketName: !Ref ImageUploadBucket
-=======
   saveImageMetadata:
     Type: AWS::Serverless::Function
     Properties:
@@ -186,7 +171,7 @@ Resources:
             Action:
               - s3:PutObject
             Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
->>>>>>> origin/main
+
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -195,18 +180,7 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrekAPI
 
-<<<<<<< HEAD
-
-Outputs:
-  ApiUrl:
-    Description: "HTTP API endpoint base URL"
-    Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
-  LocationImagesBucketName:
-    Value: !Ref LocationImagesBucket
-=======
 Outputs:
   TripTrekApiUrl:
     Description: "TripTrek HTTP API Endpoint"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
-
->>>>>>> origin/main
