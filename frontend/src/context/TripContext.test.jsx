@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { TripProvider, useTripContext } from './TripContext'
 
-const API_Endpoint = 'https://6s2onct2n8.execute-api.us-east-1.amazonaws.com/'
+const API_Endpoint = 'https://04vzht9lw9.execute-api.us-east-1.amazonaws.com/'
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
