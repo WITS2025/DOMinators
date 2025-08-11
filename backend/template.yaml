@@ -1,6 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Lambda + API Gateway using SAM
+Description: TripTrek API with Lambda, DynamoDB, and pre-signed S3 upload support
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 10
+    Environment:
+      Variables:
+        AWS_REGION: !Ref AWS::Region
 
 Parameters:
   ImageUploadBucket:
@@ -13,7 +21,6 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -66,11 +73,10 @@ Resources:
     Properties:
       FunctionName: createTrip
       Handler: index.handler
-      Runtime: nodejs22.x 
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -84,11 +90,10 @@ Resources:
     Properties:
       FunctionName: getTripList
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -96,17 +101,16 @@ Resources:
             Path: /getTripList
             Method: GET
             ApiId: !Ref TripTrekAPI
-  
+
   updateTrip:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: updateTrip
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -120,11 +124,10 @@ Resources:
     Properties:
       FunctionName: deleteTrip
       Handler: index.handler
-      Runtime: nodejs22.x
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: TripTrek
+            TableName: !Ref TripTrekTable
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -133,6 +136,7 @@ Resources:
             Method: DELETE
             ApiId: !Ref TripTrekAPI
 
+<<<<<<< HEAD
   imageUploader:
     Type: AWS::Serverless::Function
     Properties:
@@ -146,6 +150,43 @@ Resources:
       Policies:
         - S3WritePolicy:
             BucketName: !Ref ImageUploadBucket
+=======
+  saveImageMetadata:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: saveImageMetadata
+      Handler: saveImageMetadata.handler
+      CodeUri: saveImageMetadata/
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TripTrekTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TripTrekTable
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /saveImageMetadata
+            Method: POST
+            ApiId: !Ref TripTrekAPI
+
+  generateUploadUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: generateUploadUrl
+      Handler: index.handler
+      CodeUri: generateUploadUrl/
+      Environment:
+        Variables:
+          BUCKET_NAME: my-location-images-bucket
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
+>>>>>>> origin/main
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -154,6 +195,7 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrekAPI
 
+<<<<<<< HEAD
 
 Outputs:
   ApiUrl:
@@ -161,3 +203,10 @@ Outputs:
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
   LocationImagesBucketName:
     Value: !Ref LocationImagesBucket
+=======
+Outputs:
+  TripTrekApiUrl:
+    Description: "TripTrek HTTP API Endpoint"
+    Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+
+>>>>>>> origin/main

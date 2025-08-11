@@ -22,6 +22,8 @@ Hub.listen('auth', ({ payload }) => {
     window.location.reload();
   }
 });
+import { TripProvider } from './context/TripContext'
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
