@@ -20,6 +20,7 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
