@@ -1,5 +1,5 @@
 // src/pages/TripDetail.jsx
-/*import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import TripForm from '../components/TripForm'
 import { useTripContext } from '../context/TripContext'
@@ -11,6 +11,13 @@ export default function TripDetail() {
   
   const [trip, setTrip] = useState(null)
   const [editingTrip, setEditingTrip] = useState(null)
+
+  useEffect(() => {
+    if (trip?.imageUrl) {
+      console.log("trip.imageUrl changed:", trip.imageUrl);
+    }
+  }, [trip?.imageUrl]);
+  
 
   useEffect(() => {
     if (trips.length > 0) {
@@ -131,11 +138,11 @@ export default function TripDetail() {
       )}
     </div>
   )
-}*/
+}
 
 
 // src/pages/TripDetail.jsx
-import { useState, useEffect } from 'react'
+/*import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import TripForm from '../components/TripForm'
 import { useTripContext } from '../context/TripContext'
@@ -267,4 +274,4 @@ export default function TripDetail() {
       )}
     </div>
   )
-}
+}*/

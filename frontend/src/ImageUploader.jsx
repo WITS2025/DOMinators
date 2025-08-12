@@ -6,7 +6,7 @@ export default function ImageUploader({ locationName }) {
   const [error, setError] = useState("");
   const [images, setImages] = useState([]);
 
-  const API_BASE = "https://0xi0ck7hti.execute-api.us-east-1.amazonaws.com";
+  const API_BASE = "https://04vzht9lw9.execute-api.us-east-1.amazonaws.com/";
 
   // Load existing images when component mounts
   useEffect(() => {
