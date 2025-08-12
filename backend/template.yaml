@@ -156,23 +156,22 @@ Resources:
             Method: POST
             ApiId: !Ref TripTrekAPI
 
-  generateUploadUrl:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: generateUploadUrl
-      Handler: index.handler
-      CodeUri: generateUploadUrl/
-      Environment:
-        Variables:
-          BUCKET_NAME: my-location-images-bucket
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - s3:PutObject
-            Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
-
-      Events:
+  # generateUploadUrl:
+    # Type: AWS::Serverless::Function
+    # Properties:
+    #       FunctionName: generateUploadUrl
+    #       Handler: index.handler
+    #       CodeUri: generateUploadUrl/
+    #       Environment:
+    #         Variables:
+    #           BUCKET_NAME: my-location-images-bucket
+    #       Policies:
+    #         - Statement:
+    #             Effect: Allow
+    #             Action:
+    #               - s3:PutObject
+    #             Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
+    
         ApiForMyApp:
           Type: HttpApi
           Properties:
