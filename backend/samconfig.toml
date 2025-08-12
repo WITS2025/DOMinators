@@ -12,7 +12,7 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 disable_rollback = true
 image_repositories = []
-parameter_overrides = "ImageUploadBucket=trekatrip-location-images"
+# parameter_overrides = "ImageUploadBucket=trekatrip-location-images"
 
 [default.build.parameters]
 cached = true

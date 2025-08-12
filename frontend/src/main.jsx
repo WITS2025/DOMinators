@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import './auth-styles.css'; // Add this new CSS file
+import './auth-styles.css'; 
 
 import { Amplify } from 'aws-amplify';
 import { Hub } from 'aws-amplify/utils';

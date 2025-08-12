@@ -6,10 +6,9 @@ Globals:
   Function:
     Runtime: nodejs22.x
     Timeout: 10
-    Environment:
-      Variables:
-        AWS_REGION: !Ref AWS::Region
-
+#   Environment:
+#      Variables:
+#        AWS_REGION: !Ref AWS::Region
 Parameters:
   ImageUploadBucket:
     Type: String
@@ -33,7 +32,6 @@ Resources:
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
-
   TripTrekAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -48,25 +46,26 @@ Resources:
           - "*"
         AllowHeaders:
           - "*"
-  LocationImagesBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref ImageUploadBucket
-      CorsConfiguration:
-        CorsRules:
-          - AllowedOrigins:
-              - "*"
-            AllowedMethods:
-              - PUT
-              - POST
-              - GET
-            AllowedHeaders:
-              - "*"
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
+
+  # LocationImagesBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: !Ref ImageUploadBucket
+  #     CorsConfiguration:
+  #       CorsRules:
+  #         - AllowedOrigins:
+  #             - "*"
+  #           AllowedMethods:
+  #             - PUT
+  #             - POST
+  #             - GET
+  #           AllowedHeaders:
+  #             - "*"
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: false
+  #       BlockPublicPolicy: false
+  #       IgnorePublicAcls: false
+  #       RestrictPublicBuckets: false
 
   createTrip:
     Type: AWS::Serverless::Function
@@ -157,27 +156,28 @@ Resources:
             ApiId: !Ref TripTrekAPI
 
   # generateUploadUrl:
-    # Type: AWS::Serverless::Function
-    # Properties:
-    #       FunctionName: generateUploadUrl
-    #       Handler: index.handler
-    #       CodeUri: generateUploadUrl/
-    #       Environment:
-    #         Variables:
-    #           BUCKET_NAME: my-location-images-bucket
-    #       Policies:
-    #         - Statement:
-    #             Effect: Allow
-    #             Action:
-    #               - s3:PutObject
-    #             Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
-    
-        ApiForMyApp:
-          Type: HttpApi
-          Properties:
-            Path: /generateUploadUrl
-            Method: POST
-            ApiId: !Ref TripTrekAPI
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: generateUploadUrl
+  #     Handler: index.handler
+  #     CodeUri: generateUploadUrl/
+  #     Environment:
+  #       Variables:
+  #         BUCKET_NAME: my-location-images-bucket
+  #     Policies:
+  #       - Statement:
+  #           Effect: Allow
+  #           Action:
+  #             - s3:PutObject
+  #           Resource: arn:aws:s3:::my-location-images-bucket/uploads/*
+  #
+  #   Events:
+  #     ApiForMyApp:
+  #       Type: HttpApi
+  #       Properties:
+  #         Path: /generateUploadUrl
+  #         Method: POST
+  #         ApiId: !Ref TripTrekAPI
 
 Outputs:
   TripTrekApiUrl:

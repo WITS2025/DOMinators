@@ -1,9 +1,20 @@
-// src/context/__tests__/TripContext.test.jsx
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { TripProvider, useTripContext } from './TripContext'
 
-const API_Endpoint = 'https://3b82f55n6d.execute-api.us-east-1.amazonaws.com/'
+const API_Endpoint = 'https://f14n94bd6c.execute-api.us-east-1.amazonaws.com/'
+
+// Create a mock useAuth function that we can control
+let mockUseAuth
+
+// Mock the AuthContext module 
+vi.mock('./AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: {
+      userId: 'test-user-123'
+    }
+  }))
+}))
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
@@ -28,9 +39,13 @@ let consoleSpy
 // Mock alert
 global.alert = vi.fn()
 
+const mockUser = {
+  userId: 'test-user-123'
+}
+
 const mockTripsResponse = [
   {
-    pk: 'trip-1',
+    sk: 'trip-1',
     destination: 'Paris',
     startDate: '01/01/2024',
     endDate: '01/03/2024',
@@ -45,7 +60,7 @@ const mockTripsResponse = [
     ]
   },
   {
-    pk: 'trip-2',
+    sk: 'trip-2',
     destination: 'Tokyo',
     startDate: '02/01/2024',
     endDate: '02/05/2024',
@@ -60,8 +75,16 @@ const renderTripContext = () => {
 }
 
 describe('TripContext', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+   
+    // Get reference to the mocked useAuth function
+    const { useAuth } = await import('./AuthContext')
+    mockUseAuth = useAuth
+   
+    // Reset to default mock user
+    mockUseAuth.mockReturnValue({ user: mockUser })
+   
     // Mock console methods to suppress logs during tests
     consoleSpy = {
       error: vi.spyOn(console, 'error').mockImplementation(() => {}),
@@ -88,11 +111,11 @@ describe('TripContext', () => {
     it('should throw error when used outside TripProvider', () => {
       // Suppress console errors for this test
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
+
       expect(() => {
         renderHook(() => useTripContext())
       }).toThrow('useTripContext must be used within a TripProvider')
-      
+
       errorSpy.mockRestore()
     })
   })
@@ -100,7 +123,7 @@ describe('TripContext', () => {
   describe('TripProvider', () => {
     it('should provide initial context values', async () => {
       const { result } = renderTripContext()
-      
+
       // Initially loading should be true as fetchTrips is called on mount
       expect(result.current.loading).toBe(true)
       expect(result.current.trips).toEqual([])
@@ -108,14 +131,14 @@ describe('TripContext', () => {
       expect(typeof result.current.deleteTrip).toBe('function')
       expect(typeof result.current.saveTrip).toBe('function')
       expect(typeof result.current.getTripById).toBe('function')
-      
+
       // Wait for loading to complete
       await waitFor(() => {
         expect(result.current.loading).toBe(false)
       })
     })
 
-    it('should fetch trips on mount', async () => {
+    it('should fetch trips on mount with userId', async () => {
       const { result } = renderTripContext()
 
       await waitFor(() => {
@@ -123,7 +146,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=${mockUser.userId}`,
         { method: 'GET' }
       )
 
@@ -142,9 +165,24 @@ describe('TripContext', () => {
       })
     })
 
+    it('should not fetch trips when user is not available', async () => {
+      // Mock useAuth to return no user for this test only
+      mockUseAuth.mockReturnValueOnce({ user: null })
+
+      const { result } = renderTripContext()
+
+      // Wait a bit to ensure no API calls are made
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Should not make any API calls without user
+      expect(global.fetch).not.toHaveBeenCalled()
+      expect(result.current.trips).toEqual([])
+      expect(result.current.loading).toBe(false)
+    })
+
     it('should handle fetch error gracefully', async () => {
       const fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'))
-      
+
       const { result } = renderTripContext()
 
       await waitFor(() => {
@@ -154,7 +192,7 @@ describe('TripContext', () => {
       // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=${mockUser.userId}`,
         { method: 'GET' }
       )
     })
@@ -175,14 +213,14 @@ describe('TripContext', () => {
       // Should still have empty trips array after error
       expect(result.current.trips).toEqual([])
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=${mockUser.userId}`,
         { method: 'GET' }
       )
     })
   })
 
   describe('deleteTrip', () => {
-    it('should delete trip successfully', async () => {
+    it('should delete trip successfully with userId', async () => {
       const { result } = renderTripContext()
 
       await waitFor(() => {
@@ -200,7 +238,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}deleteTrip?tripId=trip-1`,
+        `${API_Endpoint}deleteTrip?userId=${mockUser.userId}&tripId=trip-1`,
         { method: 'DELETE' }
       )
     })
@@ -224,7 +262,7 @@ describe('TripContext', () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_Endpoint}deleteTrip?tripId=trip-1`,
+        `${API_Endpoint}deleteTrip?userId=${mockUser.userId}&tripId=trip-1`,
         { method: 'DELETE' }
       )
       expect(global.alert).toHaveBeenCalledWith('Failed to delete trip. Please try again.')
@@ -232,9 +270,9 @@ describe('TripContext', () => {
   })
 
   describe('saveTrip', () => {
-    it('should create new trip', async () => {
+    it('should create new trip with userId', async () => {
       const { result } = renderTripContext()
-      
+
       const newTrip = {
         destination: 'London',
         startDate: '03/01/2024',
@@ -259,6 +297,8 @@ describe('TripContext', () => {
           body: JSON.stringify({
             ...newTrip,
             id: 'mock-uuid-123',
+            sk: 'mock-uuid-123',
+            user: { userId: mockUser.userId },
             itinerary: [
               { date: '01/01/2024', activities: [] },
               { date: '01/01/2024', activities: [] }
@@ -270,7 +310,7 @@ describe('TripContext', () => {
       expect(global.alert).toHaveBeenCalledWith('Trip created successfully!')
     })
 
-    it('should update existing trip', async () => {
+    it('should update existing trip with userId', async () => {
       const { result } = renderTripContext()
 
       await waitFor(() => {
@@ -298,7 +338,8 @@ describe('TripContext', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             attributeName: 'destination',
-            newValue: 'Updated Paris'
+            newValue: 'Updated Paris',
+            user: { userId: mockUser.userId }
           })
         }
       )
@@ -366,7 +407,8 @@ describe('TripContext', () => {
         expect.stringContaining('updateTrip?tripId=trip-1'),
         expect.objectContaining({
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: expect.stringContaining(mockUser.userId)
         })
       )
     })
@@ -427,14 +469,14 @@ describe('TripContext', () => {
       })
 
       // Verify the fetch was called with sorted activities
-      const callArgs = global.fetch.mock.calls.find(call => 
+      const callArgs = global.fetch.mock.calls.find(call =>
         call[0].includes('createTrip')
       )
       expect(callArgs).toBeDefined()
-      
+
       const requestBody = JSON.parse(callArgs[1].body)
       const activities = requestBody.itinerary[0].activities
-      
+
       // Should be sorted: 12:00 AM, 8:00 AM, 12:00 PM, 11:30 PM
       expect(activities[0].name).toBe('Midnight Activity')
       expect(activities[1].name).toBe('Early Activity')
@@ -444,20 +486,20 @@ describe('TripContext', () => {
   })
 
   describe('fetchTrips integration', () => {
-    it('should call fetchTrips on mount', async () => {
+    it('should call fetchTrips on mount with userId', async () => {
       const fetchSpy = vi.spyOn(global, 'fetch')
-      
+
       renderTripContext()
 
       expect(fetchSpy).toHaveBeenCalledWith(
-        `${API_Endpoint}getTripList`,
+        `${API_Endpoint}getTripList?userId=${mockUser.userId}`,
         { method: 'GET' }
       )
     })
 
     it('should refresh trips after successful delete', async () => {
       const { result } = renderTripContext()
-      
+
       await waitFor(() => {
         expect(result.current.trips).toHaveLength(2)
       })
@@ -480,7 +522,7 @@ describe('TripContext', () => {
 
     it('should refresh trips after successful save', async () => {
       const { result } = renderTripContext()
-      
+
       const newTrip = {
         destination: 'London',
         startDate: '03/01/2024',
@@ -493,7 +535,7 @@ describe('TripContext', () => {
         .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ success: true }) }) // create response
         .mockResolvedValueOnce({ // refresh response
           ok: true,
-          json: () => Promise.resolve([...mockTripsResponse, { pk: 'trip-3', ...newTrip }])
+          json: () => Promise.resolve([...mockTripsResponse, { sk: 'trip-3', ...newTrip }])
         })
 
       await act(async () => {
@@ -502,6 +544,35 @@ describe('TripContext', () => {
 
       // Should have called create and then getTripList
       expect(global.fetch).toHaveBeenCalledTimes(3) // initial fetch + create + refresh
+    })
+  })
+
+  describe('user dependency', () => {
+    it('should refetch trips when user changes', async () => {
+      // Start with no user
+      mockUseAuth.mockReturnValueOnce({ user: null })
+      const { result, rerender } = renderTripContext()
+     
+      expect(global.fetch).not.toHaveBeenCalled()
+     
+      // User logs in - need to clear mocks and set up new return value
+      vi.clearAllMocks()
+      mockUseAuth.mockReturnValue({ user: mockUser })
+     
+      // Reset fetch mock for the new user scenario
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockTripsResponse)
+      })
+     
+      rerender()
+     
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          `${API_Endpoint}getTripList?userId=${mockUser.userId}`,
+          { method: 'GET' }
+        )
+      })
     })
   })
 })
