@@ -88,7 +88,7 @@ export const handler = async (event) => {
     const end = parseDate(endDate);
     const duration = (end - start) / (1000 * 60 * 60 * 24);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || duration < 1) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || duration < 0) {
       throw new Error("Invalid or too short date range.");
     }
   } catch (err) {

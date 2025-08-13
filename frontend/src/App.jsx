@@ -7,6 +7,7 @@ import ContactUs from './pages/ContactUs';
 import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail';
 import { TripProvider } from './context/TripContext'; 
+import NavigationBar from './components/NavigationBar' ;
 import Chatbot from './components/chatbot/Chatbot';
 
 function App() {

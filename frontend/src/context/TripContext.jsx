@@ -14,7 +14,7 @@ export const useTripContext = () => {
 };
 
 export const TripProvider = ({ children }) => {
-  const API_Endpoint = 'https://50ohmvai1k.execute-api.us-east-1.amazonaws.com/';
+  const API_Endpoint = 'https://543chrrabf.execute-api.us-east-1.amazonaws.com/';
   const { user } = useAuth(); // get userId from AuthContext
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);

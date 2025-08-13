@@ -6,7 +6,7 @@ Parameters:
   ImageUploadBucket:
     Type: String
     Description: S3 bucket for uploaded location images
-    Default: triptrek-location-images
+    Default: wits-triptrek-images
 
 Resources:
 
