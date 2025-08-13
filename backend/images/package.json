@@ -1,0 +1,17 @@
+{
+    "name": "image-upload-lambda",
+    "version": "1.0.0",
+    "description": "Lambda function to generate signed URLs for image upload to S3",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+      "test": "echo \"No tests specified\" && exit 0"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "aws-sdk": "^2.1430.0",
+      "@aws-sdk/client-dynamodb": "^3.846.0",
+      "@aws-sdk/lib-dynamodb": "^3.846.0"
+    }
+  }
