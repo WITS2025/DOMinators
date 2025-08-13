@@ -1,5 +1,9 @@
 {
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-react": "^6.11.2",
+    "aws-amplify": "^6.15.4"
   }
 }

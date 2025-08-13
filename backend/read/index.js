@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
@@ -11,35 +11,36 @@ const CORS_HEADERS = {
 };
 
 export const handler = async (event) => {
-  console.log("Event received:", event);
+  const userId = event?.queryStringParameters?.userId;
+
+  if (!userId) {
+    return {
+      statusCode: 400,
+      headers: CORS_HEADERS,
+      body: JSON.stringify("Missing userId"),
+    };
+  }
 
   const params = {
-    TableName: "TripTrek"
+    TableName: "TripTrek",
+    KeyConditionExpression: "pk = :userId",
+    ExpressionAttributeValues: {
+      ":userId": userId,
+    },
   };
 
   try {
-    const data = await ddbDocClient.send(new ScanCommand(params));
-    console.log("Scan success:", data);
-
-    if (!data.Items || data.Items.length === 0) {
-      return {
-        statusCode: 404,
-        headers: CORS_HEADERS,
-        body: JSON.stringify("No trips found"),
-      };
-    }
-
+    const data = await ddbDocClient.send(new QueryCommand(params));
     return {
       statusCode: 200,
       headers: CORS_HEADERS,
       body: JSON.stringify(data.Items),
     };
   } catch (err) {
-    console.error("Error retrieving trip items from DynamoDB", err);
     return {
       statusCode: 500,
       headers: CORS_HEADERS,
-      body: JSON.stringify("Error retrieving trip items from DynamoDB"),
+      body: JSON.stringify("Error retrieving trips"),
     };
   }
 };
