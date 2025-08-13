@@ -76,7 +76,7 @@ Resources:
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -93,7 +93,7 @@ Resources:
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -110,7 +110,7 @@ Resources:
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -127,7 +127,7 @@ Resources:
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -135,7 +135,7 @@ Resources:
             Path: /deleteTrip
             Method: DELETE
             ApiId: !Ref TripTrekAPI
-
+            
   saveImageMetadata:
     Type: AWS::Serverless::Function
     Properties:

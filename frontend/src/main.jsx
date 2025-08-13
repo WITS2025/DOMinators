@@ -22,7 +22,8 @@ Hub.listen('auth', ({ payload }) => {
     window.location.reload();
   }
 });
-import { TripProvider } from './context/TripContext'
+
+import { TripProvider } from './context/TripContext.jsx';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(

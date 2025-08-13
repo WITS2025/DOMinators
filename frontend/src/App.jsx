@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import NavigationBar from './components/NavigationBar';
+
+// Import your page components
 import Home from './pages/Home';
 import About from './pages/About';
 import ContactUs from './pages/ContactUs';
 import TripList from './pages/TripList';
-import TripDetail from './pages/TripDetail'; 
+import TripDetail from './pages/TripDetail';
 import { TripProvider } from './context/TripContext'; 
+import Chatbot from './components/chatbot/Chatbot';
 
 function App() {
   // No need to pass user props anymore
@@ -22,6 +24,7 @@ function App() {
             <Route path="/trips/:tripId" element={<TripDetail />} />
           </Routes>
         </div>
+        <Chatbot />
       </Router>
     </TripProvider>
   );

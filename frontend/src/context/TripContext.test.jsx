@@ -16,6 +16,7 @@ vi.mock('./AuthContext', () => ({
   }))
 }))
 
+
 // Mock date-fns
 vi.mock('date-fns', () => ({
   format: vi.fn((date, formatStr) => {
