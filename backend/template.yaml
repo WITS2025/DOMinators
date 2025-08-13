@@ -15,6 +15,7 @@ Resources:
   TripTrekTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      TableName: TripTrek
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -46,7 +47,7 @@ Resources:
       CodeUri: create/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -63,7 +64,7 @@ Resources:
       CodeUri: read/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -80,7 +81,7 @@ Resources:
       CodeUri: update/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -97,7 +98,7 @@ Resources:
       CodeUri: delete/
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TripTrekTable
+            TableName: TripTrek
       Events:
         ApiForMyApp:
           Type: HttpApi
@@ -105,7 +106,7 @@ Resources:
             Path: /deleteTrip
             Method: DELETE
             ApiId: !Ref TripTrekAPI
-
+            
   saveImageMetadata:
     Type: AWS::Serverless::Function
     Properties:
@@ -153,4 +154,3 @@ Outputs:
   TripTrekApiUrl:
     Description: "TripTrek HTTP API Endpoint"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
-
