@@ -16,6 +16,7 @@
     "@aws-amplify/ui-react": "^6.0.0",
     "aws-amplify": "^6.15.5",
     "bootstrap": "^5.3.7",
+    "browser-image-compression": "^2.0.2",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",

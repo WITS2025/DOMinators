@@ -162,7 +162,6 @@ export const TripProvider = ({ children }) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         const data = await response.json();
         alert('Trip created successfully!');
       } catch (error) {
@@ -172,6 +171,48 @@ export const TripProvider = ({ children }) => {
 
     await fetchTrips();
   };
+
+  const slugify = (text) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')         // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')     // Remove non-word characters
+    .replace(/\-\-+/g, '-');      // Replace multiple - with single -
+
+  const uploadTripImage = async (file, locationName, tripId) => {
+    const extension = file.name.split('.').pop();
+    const safeBase = slugify(locationName || 'trip', { lower: true });
+    const uniqueFileName = `${safeBase}/${uuidv4()}.${extension}`;
+  
+    const res = await fetch(`${API_Endpoint}generateUploadUrl`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileType: file.type, fileName: uniqueFileName }),
+    });
+  
+    if (!res.ok) {
+      throw new Error('Failed to get upload URL');
+    }
+  
+    const { uploadUrl, imageUrl } = await res.json();
+  
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+  
+    if (tripId) {
+      await updateTripAPI(tripId, 'imageUrl', imageUrl);
+      await fetchTrips();
+    }
+  
+    return imageUrl;
+  };
+
+  // Get trip by ID
 
   const getTripById = (id) => {
     return trips.find(trip => trip.id === id);
@@ -189,8 +230,9 @@ export const TripProvider = ({ children }) => {
     fetchTrips,
     deleteTrip,
     saveTrip,
-    getTripById
-  };
+    getTripById,
+    uploadTripImage
+  }
 
   return (
     <TripContext.Provider value={value}>
