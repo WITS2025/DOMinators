@@ -14,7 +14,9 @@ export const useTripContext = () => {
 }
 
 export const TripProvider = ({ children }) => {
+
   const API_Endpoint = 'https://6s2onct2n8.execute-api.us-east-1.amazonaws.com/'
+
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(false)
 
