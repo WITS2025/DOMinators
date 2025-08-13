@@ -6,6 +6,7 @@ import About from './pages/About';
 import ContactUs from './pages/ContactUs';
 import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail';
+import NavigationBar from './components/NavigationBar';
 import { TripProvider } from './context/TripContext'; 
 import Chatbot from './components/chatbot/Chatbot';
 
