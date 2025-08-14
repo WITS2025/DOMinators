@@ -128,11 +128,13 @@
 
 
 // src/pages/TripDetail.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TripForm from '../components/TripForm';
 import { useTripContext } from '../context/TripContext';
+import TripMap from '../components/TripMap';
 
+const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export default function TripDetail() {
   const { tripId } = useParams();
@@ -141,6 +143,7 @@ export default function TripDetail() {
 
   const [trip, setTrip] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     if (trip?.imageUrl) {
@@ -154,6 +157,10 @@ export default function TripDetail() {
       setTrip(foundTrip);
     }
   }, [trips, tripId, getTripById]);
+
+  const toggleMap = () => {
+    setShowMap(prev => !prev);
+  };
 
   const handleSave = async (updatedTrip) => {
     await saveTrip(updatedTrip);
@@ -214,9 +221,21 @@ export default function TripDetail() {
             <button className="btn btn-secondary mb-3 me-2" onClick={() => navigate('/trips')}>
               &larr; Back to Trips
             </button>
-            <button className="btn btn-terra mb-3" onClick={() => setEditingTrip(trip)}>
+            <button
+              className="btn btn-terra mb-3 me-2"
+              onClick={() => {
+                setEditingTrip(trip);
+                setShowMap(false); // because if map is on page, mapData won't reset
+              }}
+            >
               Edit Trip
             </button>
+            { apiKey && (
+              <button 
+                className="btn btn-terra mb-3"
+                onClick={toggleMap}>
+                {showMap ? 'Hide Map' : 'Show Map'}
+              </button>)}
           </div>
 
           {trip.itinerary && trip.itinerary.length > 0 ? (
@@ -244,6 +263,17 @@ export default function TripDetail() {
               <p>No itinerary available for this trip.</p>
             </div>
           )}
+          {apiKey && showMap && <TripMap
+            trip={trip}
+            onMapDataReady={(mapData) => {
+              const updatedTrip = {
+                ...trip,
+                mapData
+              };
+              //setTrip(updatedTrip);
+              handleSave(updatedTrip); // <-- saves and refreshes
+            }}
+          />}
         </div>
       )}
     </div>
