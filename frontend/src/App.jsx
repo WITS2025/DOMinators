@@ -8,7 +8,6 @@ import TripList from './pages/TripList';
 import TripDetail from './pages/TripDetail';
 import NavigationBar from './components/NavigationBar';
 import { TripProvider } from './context/TripContext'; 
-import NavigationBar from './components/NavigationBar' ;
 import Chatbot from './components/chatbot/Chatbot';
 
 function App() {
