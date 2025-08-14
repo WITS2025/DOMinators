@@ -1,11 +1,16 @@
 // src/components/TripForm.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
 import { format, eachDayOfInterval, parse } from 'date-fns';
+import { useTripContext } from '../context/TripContext';
+import { useAuth } from '../context/AuthContext';
+import imageCompression from 'browser-image-compression';
 
 export default function TripForm({ trip, onSave, onCancel }) {
+  const { uploadTripImage } = useTripContext();
+  const [imageUrl, setImageUrl] = useState(trip.imageUrl || '');
   const [destination, setDestination] = useState(trip.destination || '');
   const [startDate, setStartDate] = useState(trip.startDate || '');
   const [endDate, setEndDate] = useState(trip.endDate || '');
@@ -13,33 +18,32 @@ export default function TripForm({ trip, onSave, onCancel }) {
   const [newActivityTime, setNewActivityTime] = useState({});
   const [newActivityName, setNewActivityName] = useState({});
   const [error, setError] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const { user } = useAuth();
 
-  // Convert MM/DD/YYYY → yyyy-MM-dd (for date input)
+  // Date formatting helpers
   const toInputDate = (display) => {
     if (!display) return '';
     const [m, d, y] = display.split('/');
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   };
-
-  // Convert yyyy-MM-dd → MM/DD/YYYY (from date input)
   const fromInputDate = (iso) => {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
     return `${m}/${d}/${y}`;
   };
-
   const parseMDY = (str) => parse(str, 'MM/dd/yyyy', new Date());
 
+  // Build itinerary when dates change
   useEffect(() => {
     if (startDate && endDate) {
       const start = parseMDY(startDate);
       const end = parseMDY(endDate);
-
       if (end >= start) {
         const days = eachDayOfInterval({ start, end });
-        setItinerary(prev => {
-          const prevMap = Object.fromEntries(prev.map(day => [day.date, day]));
-          return days.map(date => {
+        setItinerary((prev) => {
+          const prevMap = Object.fromEntries(prev.map((day) => [day.date, day]));
+          return days.map((date) => {
             const dateStr = format(date, 'MM/dd/yyyy');
             return prevMap[dateStr] || { date: dateStr, activities: [] };
           });
@@ -52,17 +56,25 @@ export default function TripForm({ trip, onSave, onCancel }) {
     }
   }, [startDate, endDate]);
 
+  // Time formatter
+  const formatTime12Hour = (timeStr) => {
+    const [hour, minute] = timeStr.split(':');
+    const h = parseInt(hour, 10);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 || 12;
+    return `${displayHour}:${minute} ${suffix}`;
+  };
+
+  // Activity handlers
   const handleAddActivity = (date) => {
     const time = newActivityTime[date];
     const name = newActivityName[date];
     if (!time || !name) return;
-
     const formattedTime = formatTime12Hour(time);
 
-    setItinerary(prev =>
-      prev.map(day => {
+    setItinerary((prev) =>
+      prev.map((day) => {
         if (day.date !== date) return day;
-
         const updatedActivities = [...day.activities, { time: formattedTime, name }].sort((a, b) => {
           const parseTime = (str) => {
             const [t, mod] = str.split(' ');
@@ -73,26 +85,17 @@ export default function TripForm({ trip, onSave, onCancel }) {
           };
           return parseTime(a.time).localeCompare(parseTime(b.time));
         });
-
         return { ...day, activities: updatedActivities };
       })
     );
 
-    setNewActivityTime({ ...newActivityTime, [date]: '' });
-    setNewActivityName({ ...newActivityName, [date]: '' });
-  };
-
-  const formatTime12Hour = (timeStr) => {
-    const [hour, minute] = timeStr.split(':');
-    const h = parseInt(hour, 10);
-    const suffix = h >= 12 ? 'PM' : 'AM';
-    const displayHour = h % 12 || 12;
-    return `${displayHour}:${minute} ${suffix}`;
+    setNewActivityTime((prev) => ({ ...prev, [date]: '' }));
+    setNewActivityName((prev) => ({ ...prev, [date]: '' }));
   };
 
   const handleRemoveActivity = (date, index) => {
-    setItinerary(prev =>
-      prev.map(day =>
+    setItinerary((prev) =>
+      prev.map((day) =>
         day.date === date
           ? { ...day, activities: day.activities.filter((_, i) => i !== index) }
           : day
@@ -100,22 +103,36 @@ export default function TripForm({ trip, onSave, onCancel }) {
     );
   };
 
-  const handleSubmit = (e) => {
+  // Submit handler
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!destination || !startDate || !endDate) {
       setError('Please fill in all fields.');
       return;
     }
-    const itineraryToSave = itinerary.map(day => ({
+
+    let finalImageUrl = imageUrl;
+    if (selectedImageFile) {
+      finalImageUrl = await uploadTripImage(
+        selectedImageFile,
+        destination || 'trip',
+        trip?.id || null
+      );
+    }
+
+    const itineraryToSave = itinerary.map((day) => ({
       date: day.date,
-      activities: [...day.activities]
+      activities: [...day.activities],
     }));
+
     onSave({
       ...trip,
       destination,
       startDate,
       endDate,
-      itinerary: itineraryToSave
+      itinerary: itineraryToSave,
+      imageUrl: finalImageUrl,
+      user: { userId: user?.userId },
     });
   };
 
@@ -156,6 +173,39 @@ export default function TripForm({ trip, onSave, onCancel }) {
         </div>
       </div>
 
+      <div className="mb-3">
+        <label className="form-label">Trip Photo</label>
+        <input
+          type="file"
+          className="form-control"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              try {
+                const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1024, useWebWorker: true };
+                const compressedFile = await imageCompression(file, options);
+                setSelectedImageFile(compressedFile);
+                setImageUrl(URL.createObjectURL(compressedFile));
+              } catch (err) {
+                console.error('Image compression failed:', err);
+                setSelectedImageFile(file);
+                setImageUrl(URL.createObjectURL(file));
+              }
+            }
+          }}
+        />
+        {imageUrl && (
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt={trip?.destination || 'Trip image'}
+            style={{ maxWidth: '100%', marginTop: 10 }}
+            onError={() => console.error('Image failed to load:', imageUrl)}
+          />
+        )}
+      </div>
+
       {itinerary.length > 0 && (
         <div className="mb-3">
           <label className="form-label">Itinerary</label>
@@ -182,14 +232,14 @@ export default function TripForm({ trip, onSave, onCancel }) {
                   clearIcon={null}
                   format="h:mm a"
                   value={newActivityTime[day.date] || ''}
-                  onChange={(val) => setNewActivityTime({ ...newActivityTime, [day.date]: val })}
+                  onChange={(val) => setNewActivityTime((prev) => ({ ...prev, [day.date]: val }))}
                 />
                 <input
                   type="text"
                   className="form-control"
                   placeholder="Activity Description"
                   value={newActivityName[day.date] || ''}
-                  onChange={(e) => setNewActivityName({ ...newActivityName, [day.date]: e.target.value })}
+                  onChange={(e) => setNewActivityName((prev) => ({ ...prev, [day.date]: e.target.value }))}
                 />
                 <button
                   type="button"

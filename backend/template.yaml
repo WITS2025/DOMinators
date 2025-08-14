@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Lambda + API Gateway using SAM
 
+Parameters:
+  ImageUploadBucket:
+    Type: String
+    Description: S3 bucket for uploaded location images
+    Default: wits-triptrek-images
+
 Resources:
 
   TripTrekTable:
@@ -11,9 +17,13 @@ Resources:
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
   TripTrekAPI:
@@ -30,6 +40,26 @@ Resources:
           - "*"
         AllowHeaders:
           - "*"
+
+  LocationImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ImageUploadBucket
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - POST
+              - GET
+            AllowedHeaders:
+              - "*"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
 
   createTrip:
     Type: AWS::Serverless::Function
@@ -102,8 +132,32 @@ Resources:
             Path: /deleteTrip
             Method: DELETE
             ApiId: !Ref TripTrekAPI
+  
+  imageUploader:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: imageUploader
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: images/
+      Environment:
+        Variables:
+          LOCATION_IMAGES_BUCKET: !Ref ImageUploadBucket
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref ImageUploadBucket
+      Events:
+        ApiForMyApp:
+          Type: HttpApi
+          Properties:
+            Path: /generateUploadUrl
+            Method: POST
+            ApiId: !Ref TripTrekAPI
 
 Outputs:
   ApiUrl:
     Description: "HTTP API endpoint base URL"
     Value: !Sub "https://${TripTrekAPI}.execute-api.${AWS::Region}.amazonaws.com"
+  LocationImagesBucketName:
+    Description: "S3 Image Bucket Name"
+    Value: !Ref LocationImagesBucket
