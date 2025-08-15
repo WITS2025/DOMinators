@@ -335,44 +335,37 @@ form[data-amplify-form] {
   max-width: none !important;
 }
 
-/* Force the input fields to be wider too */
-form[data-amplify-form] .amplify-input {
-  width: 100% !important;
-  min-width: 375px !important; /* Changed from 500px to 375px (3/4 size) */
-}
-
-/* Force center the form fields inside the Amplify card */
-.amplify-card form {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-}
-
-/* Make each field take full width but keep them centered */
-.amplify-card form .amplify-field {
-  width: 100% !important;
-  max-width: 480px !important; /* Changed from 320px to 480px (1.5x) */
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Target the specific form element to make it 1.5x wider */
-form[data-amplify-form][data-amplify-authenticator-signin] {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  max-width: 900px !important; /* Increased from 600px to 900px (1.5x) */
+/* Target all form types including password reset forms */
+form[data-amplify-form][data-amplify-authenticator-signin],
+form[data-amplify-form][data-amplify-authenticator-signup],
+form[data-amplify-form][data-amplify-authenticator-confirmresetpassword],
+form[data-amplify-form][data-amplify-authenticator-resetpassword] {
+  width: 450px !important;
+  min-width: 450px !important;
+  max-width: none !important;
   margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* Also increase the field widths proportionally */
-form[data-amplify-form][data-amplify-authenticator-signin] .amplify-field {
+/* Make sure input fields in all forms are properly sized */
+form[data-amplify-form][data-amplify-authenticator-signin] .amplify-input,
+form[data-amplify-form][data-amplify-authenticator-signup] .amplify-input,
+form[data-amplify-form][data-amplify-authenticator-confirmresetpassword] .amplify-input,
+form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-input {
   width: 100% !important;
-  max-width: 720px !important; /* Increased from 480px to 720px (1.5x) */
+  min-width: 375px !important;
+}
+
+/* Center all fields in all forms */
+form[data-amplify-form][data-amplify-authenticator-signin] .amplify-field,
+form[data-amplify-form][data-amplify-authenticator-signup] .amplify-field,
+form[data-amplify-form][data-amplify-authenticator-confirmresetpassword] .amplify-field,
+form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-field {
+  width: 100% !important;
+  max-width: 450px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
