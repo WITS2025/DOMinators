@@ -339,7 +339,8 @@ form[data-amplify-form] {
 form[data-amplify-form][data-amplify-authenticator-signin],
 form[data-amplify-form][data-amplify-authenticator-signup],
 form[data-amplify-form][data-amplify-authenticator-confirmresetpassword],
-form[data-amplify-form][data-amplify-authenticator-resetpassword] {
+form[data-amplify-form][data-amplify-authenticator-resetpassword],
+form[data-amplify-form][data-amplify-authenticator-forgotpassword] {
   width: 450px !important;
   min-width: 450px !important;
   max-width: none !important;
@@ -354,7 +355,8 @@ form[data-amplify-form][data-amplify-authenticator-resetpassword] {
 form[data-amplify-form][data-amplify-authenticator-signin] .amplify-input,
 form[data-amplify-form][data-amplify-authenticator-signup] .amplify-input,
 form[data-amplify-form][data-amplify-authenticator-confirmresetpassword] .amplify-input,
-form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-input {
+form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-input,
+form[data-amplify-form][data-amplify-authenticator-forgotpassword] .amplify-input {
   width: 100% !important;
   min-width: 375px !important;
 }
@@ -363,7 +365,8 @@ form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-input
 form[data-amplify-form][data-amplify-authenticator-signin] .amplify-field,
 form[data-amplify-form][data-amplify-authenticator-signup] .amplify-field,
 form[data-amplify-form][data-amplify-authenticator-confirmresetpassword] .amplify-field,
-form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-field {
+form[data-amplify-form][data-amplify-authenticator-resetpassword] .amplify-field,
+form[data-amplify-form][data-amplify-authenticator-forgotpassword] .amplify-field {
   width: 100% !important;
   max-width: 450px !important;
   margin-left: auto !important;
